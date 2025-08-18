@@ -23,9 +23,15 @@ func main() {
 	if err != nil {
 		fmt.Println(err)
 	} else {
-		unpakkedDir := fmt.Sprintf("./%s_files", filepath.Base(os.Args[1]))
-		writePakData(unpakked, unpakkedDir)
-		slog.Info("Written entries to", "dir", unpakkedDir)
+		for i := range unpakked {
+			entry := unpakked[i]
+			if filepath.Ext(entry.name) == ".CMP" {
+				decodeCmp(entry.name, entry.data)
+			}
+		}
+		// unpakkedDir := fmt.Sprintf("./%s_files", filepath.Base(os.Args[1]))
+		// writePakData(unpakked, unpakkedDir)
+		// slog.Info("Written entries to", "dir", unpakkedDir)
 	}
 
 }
