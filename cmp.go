@@ -35,9 +35,10 @@ func parseCmpBody(header CMPHeader, data []byte) ([]byte, error) {
 }
 
 func decodeCmp(filename string, fileContents []byte) {
+	slog.Info("Decompressing CMP file", "name", filename)
 	header := parseCmpHeader(fileContents)
-	fmt.Printf("Name : %16s | %s\n", filename, header)
-	decompressedData, err := parseCmpBody(header, fileContents)
+	slog.Debug("Header obtained", "header", header.String())
+	decompressedData, err := parseCmpBody(header, fileContents[10:]) // TODO : Probably need to check for compression type etc. here
 	if err != nil {
 		fmt.Println("Boom!")
 	} else {

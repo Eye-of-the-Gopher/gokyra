@@ -17,7 +17,7 @@ type PakData struct {
 func extractPakFile(pakfile string) ([]PakData, error) {
 	filenames := []string{}
 	offsets := []uint32{}
-	slog.Debug("extracting Pakfile", "name", pakfile)
+	slog.Info("extracting Pakfile", "name", pakfile)
 
 	f, err := os.Open(pakfile)
 	if err != nil {
@@ -35,7 +35,7 @@ func extractPakFile(pakfile string) ([]PakData, error) {
 
 			currentPos := uint32(t)
 			if currentPos+4 >= firstOffset {
-				slog.Info("header completed")
+				slog.Debug("header completed")
 				break
 			}
 
@@ -47,7 +47,6 @@ func extractPakFile(pakfile string) ([]PakData, error) {
 			return nil, fmt.Errorf("unexpected short read while looking for offset: %w", err)
 		}
 
-		slog.Debug("Offset obtained", "offset", offset)
 		offsets = append(offsets, offset)
 
 		var fnamechar byte
@@ -71,7 +70,7 @@ func extractPakFile(pakfile string) ([]PakData, error) {
 		}
 		fname := string(fnamechars)
 		filenames = append(filenames, fname)
-		slog.Debug("Filename obtained ", "name", fname)
+		slog.Debug("Entry parsed", "offset", offset, "name", fname)
 	}
 
 	ret := make([]PakData, len(offsets))
@@ -91,7 +90,7 @@ func extractPakFile(pakfile string) ([]PakData, error) {
 		} else {
 			end = uint64(offsets[i+1]) - 1
 		}
-		slog.Debug("Reading", "file", filename, "From", start, "To", end)
+		slog.Debug("Extracting", "file", filename, "From", start, "To", end)
 		_, err = f.Seek(int64(start), io.SeekStart)
 		if err != nil {
 			return nil, fmt.Errorf("could not extract %s from %s at offset %d: %w", filename, pakfile, start, err)
@@ -108,7 +107,6 @@ func extractPakFile(pakfile string) ([]PakData, error) {
 		}
 		ret[i] = t
 	}
-	slog.Info("contents extracted")
 	return ret, nil
 }
 

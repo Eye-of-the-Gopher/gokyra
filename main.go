@@ -4,13 +4,12 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
-	"path/filepath"
 )
 
 func setLogger() {
 	logger := slog.New(slog.NewTextHandler(
 		os.Stderr,
-		&slog.HandlerOptions{Level: slog.LevelInfo}))
+		&slog.HandlerOptions{Level: slog.LevelDebug}))
 	slog.SetDefault(logger)
 
 }
@@ -19,13 +18,12 @@ func main() {
 	setLogger()
 	slog.Info("Starting program")
 	unpakked, err := extractPakFile(os.Args[1])
-	slog.Info("Parsed PAK file")
 	if err != nil {
 		fmt.Println(err)
 	} else {
 		for i := range unpakked {
 			entry := unpakked[i]
-			if filepath.Ext(entry.name) == ".CMP" {
+			if entry.name == "ADVENTUR.CMP" { //filepath.Ext(entry.name) == ".CMP"
 				decodeCmp(entry.name, entry.data)
 			}
 		}
