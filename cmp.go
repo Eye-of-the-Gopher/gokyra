@@ -35,8 +35,18 @@ func parseCmpBody(header CMPHeader, input []byte) ([]byte, error) {
 	output := make([]byte, header.uncompressedSize)
 	inputPos := 0
 	outputPos := 0
+	var relativeMode bool
+	if input[0] == 0x0 {
+		slog.Debug("Relative mode")
+		relativeMode = true
+		inputPos += 1
+	} else {
+		slog.Debug("Absolute mode")
+		relativeMode = false
+	}
 
-	for {
+	for inputPos < len(input) {
+		slog.Debug("Processed ", "percentage", (float64(inputPos)/float64(len(input)))*100)
 		current := input[inputPos]
 		if current == 0x80 {
 			slog.Debug("End of stream")
@@ -56,7 +66,6 @@ func parseCmpBody(header CMPHeader, input []byte) ([]byte, error) {
 				outputPos += 1
 				source += 1
 			}
-
 			inputPos += 1 // Go to the next byte
 		} else if current == 0xfe {
 			slog.Debug("Command 4 encountered")
@@ -73,7 +82,22 @@ func parseCmpBody(header CMPHeader, input []byte) ([]byte, error) {
 			}
 		} else if current == 0xff {
 			slog.Debug("Command 5 encountered")
-			break
+			count := int(binary.LittleEndian.Uint16(input[inputPos+1 : inputPos+3]))
+			pos := int(binary.LittleEndian.Uint16(input[inputPos+3 : inputPos+5]))
+			var target int
+			if relativeMode {
+				target = outputPos - pos
+				slog.Debug("Copying bytes to output (relative)", "count", count, "to", target)
+			} else {
+				target = pos
+				slog.Debug("Copying bytes to output (absolute)", "count", count, "to", target)
+			}
+			for range count {
+				output[outputPos] = output[target]
+				outputPos += 1
+				target += 1
+			}
+			inputPos += 5
 		} else if (current & 0xc0) == 0x80 {
 			slog.Debug("Command 1")
 			pattern := fmt.Sprintf("%08b", current)
@@ -87,7 +111,22 @@ func parseCmpBody(header CMPHeader, input []byte) ([]byte, error) {
 			}
 		} else if (current & 0xc0) == 0xc0 {
 			slog.Debug("Command 3")
-			break
+			count := (current & 0x3f) + 3
+			var target int
+			pos := int(binary.LittleEndian.Uint16(input[inputPos+1 : inputPos+3]))
+			if relativeMode {
+				target = outputPos - pos
+				slog.Debug("Copying bytes to output (relative)", "count", count, "to", target)
+			} else {
+				target = pos
+				slog.Debug("Copying bytes to output (absolute)", "count", count, "to", target)
+			}
+			for range count {
+				output[outputPos] = output[target]
+				outputPos += 1
+				target += 1
+			}
+			inputPos += 3
 		} else {
 			slog.Error("Corrupt file. This shouldn't happen")
 			break
@@ -105,7 +144,9 @@ func decodeCmp(filename string, fileContents []byte) {
 	if err != nil {
 		fmt.Println("Boom!")
 	} else {
-		fmt.Printf("%s", string(decompressedData))
+		fmt.Printf("Decompressed stream %d bytes", len(decompressedData))
+		debugFile := fmt.Sprintf("%s.png", filename)
+		writeCMPToPNG(decompressedData, debugFile, 320, 200)
 	}
 
 }

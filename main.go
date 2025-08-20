@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"path/filepath"
 )
 
 func setLogger() {
@@ -23,7 +24,7 @@ func main() {
 	} else {
 		for i := range unpakked {
 			entry := unpakked[i]
-			if entry.name == "ADVENTUR.CMP" { //filepath.Ext(entry.name) == ".CMP"
+			if filepath.Ext(entry.name) == ".CMP" {
 				decodeCmp(entry.name, entry.data)
 			}
 		}
