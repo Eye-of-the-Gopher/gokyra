@@ -41,9 +41,23 @@ func parseCmpBody(header CMPHeader, input []byte) ([]byte, error) {
 		if current == 0x80 {
 			slog.Debug("End of stream")
 			break
-		} else if current&0x80 == 0 {
+		} else if (current & 0x80) == 0 {
 			slog.Debug("Command 2 encountered")
-			break
+			// Copy count bytes in output buffer from outputPos - pos to  outputPos
+			count := ((current & 0x70) >> 4) + 3
+			tpos0 := current & 0x0f                  // Lower nibble of the current byte
+			tpos1 := int(tpos0) << 8                 // Moves it a byte to the left so now, we have 12 bits with the above 4 as the most significant bits
+			inputPos += 1                            // Get the next byte
+			pos := int(tpos1 + int(input[inputPos])) // Adds the next byte. So there's 12 bits now
+			source := outputPos - pos
+			slog.Debug("Copying bytes", "count", count, "from", source)
+			for range count {
+				output[outputPos] = output[source]
+				outputPos += 1
+				source += 1
+			}
+
+			inputPos += 1 // Go to the next byte
 		} else if current == 0xfe {
 			slog.Debug("Command 4 encountered")
 			inputPos += 1 // Go to count
@@ -60,7 +74,7 @@ func parseCmpBody(header CMPHeader, input []byte) ([]byte, error) {
 		} else if current == 0xff {
 			slog.Debug("Command 5 encountered")
 			break
-		} else if current&0xc0 == 0x80 {
+		} else if (current & 0xc0) == 0x80 {
 			slog.Debug("Command 1")
 			pattern := fmt.Sprintf("%08b", current)
 			count := current & 0x3f
@@ -71,7 +85,7 @@ func parseCmpBody(header CMPHeader, input []byte) ([]byte, error) {
 				inputPos += 1
 				outputPos += 1
 			}
-		} else if current&0xc0 == 0xc0 {
+		} else if (current & 0xc0) == 0xc0 {
 			slog.Debug("Command 3")
 			break
 		} else {
