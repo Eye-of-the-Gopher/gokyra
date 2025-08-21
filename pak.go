@@ -88,7 +88,7 @@ func extractPakFile(pakfile string) ([]PakData, error) {
 		if i+1 == len(offsets) {
 			end = fileLimit
 		} else {
-			end = uint64(offsets[i+1]) - 1
+			end = uint64(offsets[i+1])
 		}
 		slog.Debug("Extracting", "file", filename, "From", start, "To", end)
 		_, err = f.Seek(int64(start), io.SeekStart)
