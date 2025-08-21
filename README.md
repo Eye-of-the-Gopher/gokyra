@@ -7,7 +7,7 @@ golang.
 It's not meant to a production quality thing. Just a toy for me to
 learn Golang
 
-![Eye of the Gopher](./eye-of-the-gopher.png "Eye of the Gopher")
+![Eye of the Gopher](./eog-logo.png "Eye of the Gopher")
 
 
 
