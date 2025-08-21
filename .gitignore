@@ -2,3 +2,4 @@ assets/
 .aider*
 *_files
 *.CMP.png
+tmp/
