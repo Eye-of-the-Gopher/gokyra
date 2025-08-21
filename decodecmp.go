@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	logFile, err := os.OpenFile("op.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	logFile, err := os.OpenFile("op.log", os.O_CREATE|os.O_WRONLY, 0666)
 	if err != nil {
 		// handle error
 	}
@@ -28,11 +28,20 @@ func main() {
 			},
 		}))
 	slog.SetDefault(logger)
+	fmt.Println("./decodecmp dataFile paletteFile ouputImageFile")
 
-	data, _ := os.ReadFile(os.Args[1])
-	decompressedData := decodeCmp(os.Args[1], data)
-	debugFile := os.Args[2]
-	fmt.Printf("Writing %s\n", debugFile)
-	writeCMPToPNG(decompressedData, debugFile, 320, 200)
+	dataFile := os.Args[1]
+	paletteFile := os.Args[2]
+	ImageFile := os.Args[3]
+
+	CMPData, _ := os.ReadFile(dataFile)
+	paletteData, _ := os.ReadFile(paletteFile)
+	palette := decodePalette(paletteData)
+	decompressedData := decodeCmp(dataFile, CMPData, palette)
+
+	fmt.Println(palette)
+
+	fmt.Printf("Writing %s\n", ImageFile)
+	writeCMPToPNG(decompressedData, ImageFile, palette, 320, 200)
 
 }

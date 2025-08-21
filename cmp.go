@@ -4,6 +4,7 @@ import (
 	"crypto/md5"
 	"encoding/binary"
 	"fmt"
+	"image/color"
 	"log/slog"
 )
 
@@ -33,8 +34,8 @@ func (h CMPHeader) String() string {
 		h.fileSize, h.compressionType, h.uncompressedSize, h.paletteSize)
 }
 
-func parseCmpBody(header CMPHeader, input []byte) ([]byte, error) {
-	output := make([]byte, header.uncompressedSize*3)
+func parseCmpBody(header CMPHeader, input []byte, palette color.Palette) ([]byte, error) {
+	output := make([]byte, header.uncompressedSize)
 	inputPos := 0
 	outputPos := 0
 	var relativeMode bool
@@ -59,6 +60,7 @@ func parseCmpBody(header CMPHeader, input []byte) ([]byte, error) {
 			slog.Debug("End of stream")
 			break
 		} else if (current & 0x80) == 0 {
+			begin := inputPos
 			// Copy count bytes in output buffer from outputPos - pos to  outputPos
 			pattern := bytesToBinary([]byte{input[inputPos], input[inputPos+1]})
 			count := ((current & 0x70) >> 4) + 3
@@ -68,13 +70,21 @@ func parseCmpBody(header CMPHeader, input []byte) ([]byte, error) {
 			pos := int(tpos1 + int(input[inputPos])) // Adds the next byte. So there's 12 bits now
 			source := outputPos - pos
 			slog.Debug("C2:", "id", commandCount, "indone", inDone, "opdone", opDone, "count", count, "pattern", pattern, "from", source)
+			if source < 0 || source >= len(output) {
+				slog.Error("C2 invalid source", "source", source, "outputPos", outputPos, "pos", pos)
+				return nil, fmt.Errorf("invalid source position")
+			}
 			for range count {
 				output[outputPos] = output[source]
 				outputPos += 1
 				source += 1
 			}
 			inputPos += 1 // Go to the next command
+			if inputPos != begin+2 {
+				panic("C2 Increment wrong")
+			}
 		} else if current == 0xfe {
+			begin := inputPos
 			pattern := bytesToBinary([]byte{input[inputPos], input[inputPos+1], input[inputPos+2], input[inputPos+3]})
 			inputPos += 1                                                     // Leave command and Go to count byte 1
 			count := binary.LittleEndian.Uint16(input[inputPos : inputPos+2]) // Read Count byte 1 and 2
@@ -86,30 +96,44 @@ func parseCmpBody(header CMPHeader, input []byte) ([]byte, error) {
 				outputPos += 1
 			}
 			inputPos += 1 // Go to next command
+			if inputPos != begin+4 {
+				panic("C4 Increment wrong")
+			}
+
 		} else if current == 0xff {
-			pattern := bytesToBinary([]byte{
-				input[inputPos],
-				input[inputPos+1],
-				input[inputPos+2],
-				input[inputPos+3],
-				input[inputPos+4],
-			})
-			count := int(binary.LittleEndian.Uint16(input[inputPos+1 : inputPos+3]))
-			pos := int(binary.LittleEndian.Uint16(input[inputPos+3 : inputPos+5]))
-			var target int
-			if relativeMode {
-				target = outputPos - pos
+			begin := inputPos
+			if commandCount == 1238 {
+				inputPos += 5
 			} else {
-				target = pos
+
+				pattern := bytesToBinary([]byte{
+					input[inputPos],
+					input[inputPos+1],
+					input[inputPos+2],
+					input[inputPos+3],
+					input[inputPos+4],
+				})
+				count := int(binary.LittleEndian.Uint16(input[inputPos+1 : inputPos+3]))
+				pos := int(binary.LittleEndian.Uint16(input[inputPos+3 : inputPos+5]))
+				var target int
+				if relativeMode {
+					target = outputPos - pos
+				} else {
+					target = pos
+				}
+				slog.Debug("C5:", "id", commandCount, "indone", inDone, "opdone", opDone, "count", count, "pattern", pattern, "to", target)
+				for range count {
+					output[outputPos] = output[target]
+					outputPos += 1
+					target += 1
+				}
+				inputPos += 5
 			}
-			slog.Debug("C5:", "id", commandCount, "indone", inDone, "opdone", opDone, "count", count, "pattern", pattern, "to", target)
-			for range count {
-				output[outputPos] = output[target]
-				outputPos += 1
-				target += 1
+			if inputPos != begin+5 {
+				panic("C5 Increment wrong")
 			}
-			inputPos += 5
 		} else if (current & 0xc0) == 0x80 {
+			begin := inputPos
 			pattern := bytesToBinary([]byte{current})
 			count := current & 0x3f
 			slog.Debug("C1:", "id", commandCount, "indone", inDone, "opdone", opDone, "count", count, "pattern", pattern)
@@ -122,7 +146,11 @@ func parseCmpBody(header CMPHeader, input []byte) ([]byte, error) {
 				inputPos += 1
 				outputPos += 1
 			}
+			if inputPos != begin+int(count)+1 {
+				panic("C1 Increment wrong")
+			}
 		} else if (current & 0xc0) == 0xc0 {
+			begin := inputPos
 			pattern := bytesToBinary([]byte{
 				input[inputPos],
 				input[inputPos+1],
@@ -137,19 +165,26 @@ func parseCmpBody(header CMPHeader, input []byte) ([]byte, error) {
 				target = pos
 			}
 			slog.Debug("C3:", "id", commandCount, "indone", inDone, "opdone", opDone, "count", count, "pattern", pattern, "to", target)
+			if target < 0 || target >= len(output) {
+				slog.Error("C3 invalid target", "target", target, "outputPos", outputPos, "pos", pos)
+				return nil, fmt.Errorf("invalid target position")
+			}
 			for range count {
 				output[outputPos] = output[target]
 				outputPos += 1
 				target += 1
 			}
 			inputPos += 3 //Go to next command
+			if inputPos != begin+3 {
+				panic("C3 Increment wrong")
+			}
 		} else {
 			slog.Error("Corrupt file. This shouldn't happen")
 			break
 		}
 		if commandCount > 1235 && commandCount < 1245 {
 			pngFname := fmt.Sprintf("/tmp/frames/frame-%05d.png", commandCount)
-			writeCMPToPNG(output, pngFname, 320, 200)
+			writeCMPToPNG(output, pngFname, palette, 320, 200)
 		}
 
 	}
@@ -157,11 +192,11 @@ func parseCmpBody(header CMPHeader, input []byte) ([]byte, error) {
 	return output, nil
 }
 
-func decodeCmp(filename string, fileContents []byte) []byte {
+func decodeCmp(filename string, fileContents []byte, palette color.Palette) []byte {
 	slog.Info("Decompressing CMP file", "name", filename)
 	header, checksum := parseCmpHeader(fileContents)
 	slog.Debug("Header obtained", "header", header.String(), "checksum", checksum)
-	decompressedData, err := parseCmpBody(header, fileContents[10:]) // TODO : Probably need to check for compression type etc. here
+	decompressedData, err := parseCmpBody(header, fileContents[10:], palette) // TODO : Probably need to check for compression type etc. here
 	if err != nil {
 		slog.Error("Aborted ", "error", err)
 		return []byte{}

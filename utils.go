@@ -9,9 +9,9 @@ import (
 	"strings"
 )
 
-func writeCMPToPNG(data []byte, filename string, width, height int) error {
+func writeCMPToPNG(data []byte, filename string, palette color.Palette, width int, height int) error {
 	// Create a new grayscale image
-	img := image.NewGray(image.Rect(0, 0, width, height))
+	img := image.NewRGBA(image.Rect(0, 0, width, height))
 
 	// Fill the image with the raw data
 	for y := 0; y < height; y++ {
@@ -19,7 +19,7 @@ func writeCMPToPNG(data []byte, filename string, width, height int) error {
 			index := y*width + x
 			if index < len(data) {
 				// Use the byte value directly as grayscale intensity
-				img.Set(x, y, color.Gray{Y: data[index]})
+				img.Set(x, y, palette[data[index]])
 			}
 		}
 	}
