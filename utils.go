@@ -1,10 +1,12 @@
 package main
 
 import (
+	"fmt"
 	"image"
 	"image/color"
 	"image/png"
 	"os"
+	"strings"
 )
 
 func writeCMPToPNG(data []byte, filename string, width, height int) error {
@@ -31,4 +33,15 @@ func writeCMPToPNG(data []byte, filename string, width, height int) error {
 
 	// Encode as PNG
 	return png.Encode(file, img)
+}
+
+func bytesToBinary(data []byte) string {
+	var result strings.Builder
+	for i, b := range data {
+		if i > 0 {
+			result.WriteString(" ") // Space between bytes
+		}
+		result.WriteString(fmt.Sprintf("%08b", b))
+	}
+	return result.String()
 }
