@@ -3,3 +3,5 @@ assets/
 *_files
 *.CMP.png
 tmp/
+decodecmp
+unpak
