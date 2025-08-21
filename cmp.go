@@ -46,13 +46,12 @@ func parseCmpBody(header CMPHeader, input []byte) ([]byte, error) {
 	}
 
 	for inputPos < len(input) {
-		slog.Debug("Processed ", "percentage", (float64(inputPos)/float64(len(input)))*100)
+		done := fmt.Sprintf("%d/%d (%.2f%%)", inputPos, len(input), (float64(inputPos)/float64(len(input)))*100)
 		current := input[inputPos]
 		if current == 0x80 {
 			slog.Debug("End of stream")
 			break
 		} else if (current & 0x80) == 0 {
-			slog.Debug("Command 2 encountered")
 			// Copy count bytes in output buffer from outputPos - pos to  outputPos
 			count := ((current & 0x70) >> 4) + 3
 			tpos0 := current & 0x0f                  // Lower nibble of the current byte
@@ -60,7 +59,7 @@ func parseCmpBody(header CMPHeader, input []byte) ([]byte, error) {
 			inputPos += 1                            // Get the next byte
 			pos := int(tpos1 + int(input[inputPos])) // Adds the next byte. So there's 12 bits now
 			source := outputPos - pos
-			slog.Debug("Copying bytes", "count", count, "from", source)
+			slog.Debug("C2:", "count", count, "from", source, "done", done)
 			for range count {
 				output[outputPos] = output[source]
 				outputPos += 1
@@ -68,30 +67,27 @@ func parseCmpBody(header CMPHeader, input []byte) ([]byte, error) {
 			}
 			inputPos += 1 // Go to the next byte
 		} else if current == 0xfe {
-			slog.Debug("Command 4 encountered")
 			inputPos += 1 // Go to count
 			count := binary.LittleEndian.Uint16(input[inputPos : inputPos+2])
 			inputPos += 2 // Go to value
 			value := input[inputPos]
 			inputPos += 1 // Go to next command
 			pattern := fmt.Sprintf("%08b", value)
-			slog.Debug("Copying bytes to output", "count", count, "value", value, "in binary", pattern)
+			slog.Debug("C4:", "count", count, "value", value, "in binary", pattern, "done", done)
 			for range count {
 				output[outputPos] = value
 				outputPos += 1
 			}
 		} else if current == 0xff {
-			slog.Debug("Command 5 encountered")
 			count := int(binary.LittleEndian.Uint16(input[inputPos+1 : inputPos+3]))
 			pos := int(binary.LittleEndian.Uint16(input[inputPos+3 : inputPos+5]))
 			var target int
 			if relativeMode {
 				target = outputPos - pos
-				slog.Debug("Copying bytes to output (relative)", "count", count, "to", target)
 			} else {
 				target = pos
-				slog.Debug("Copying bytes to output (absolute)", "count", count, "to", target)
 			}
+			slog.Debug("C5:", "count", count, "to", target, "done", done)
 			for range count {
 				output[outputPos] = output[target]
 				outputPos += 1
@@ -99,10 +95,9 @@ func parseCmpBody(header CMPHeader, input []byte) ([]byte, error) {
 			}
 			inputPos += 5
 		} else if (current & 0xc0) == 0x80 {
-			slog.Debug("Command 1")
 			pattern := fmt.Sprintf("%08b", current)
 			count := current & 0x3f
-			slog.Debug("Copying bytes to output", "count", count, "pattern", pattern)
+			slog.Debug("C1:", "count", count, "pattern", pattern, "done", done)
 			inputPos += 1 // Go to next command
 			for range count {
 				output[outputPos] = input[inputPos]
@@ -110,17 +105,15 @@ func parseCmpBody(header CMPHeader, input []byte) ([]byte, error) {
 				outputPos += 1
 			}
 		} else if (current & 0xc0) == 0xc0 {
-			slog.Debug("Command 3")
 			count := (current & 0x3f) + 3
 			var target int
 			pos := int(binary.LittleEndian.Uint16(input[inputPos+1 : inputPos+3]))
 			if relativeMode {
 				target = outputPos - pos
-				slog.Debug("Copying bytes to output (relative)", "count", count, "to", target)
 			} else {
 				target = pos
-				slog.Debug("Copying bytes to output (absolute)", "count", count, "to", target)
 			}
+			slog.Debug("C3:", "count", count, "to", target, "done", done)
 			for range count {
 				output[outputPos] = output[target]
 				outputPos += 1
@@ -136,17 +129,15 @@ func parseCmpBody(header CMPHeader, input []byte) ([]byte, error) {
 	return output, nil
 }
 
-func decodeCmp(filename string, fileContents []byte) {
+func decodeCmp(filename string, fileContents []byte) []byte {
 	slog.Info("Decompressing CMP file", "name", filename)
 	header := parseCmpHeader(fileContents)
 	slog.Debug("Header obtained", "header", header.String())
 	decompressedData, err := parseCmpBody(header, fileContents[10:]) // TODO : Probably need to check for compression type etc. here
 	if err != nil {
-		fmt.Println("Boom!")
+		panic("Boom!")
+		return nil
 	} else {
-		fmt.Printf("Decompressed stream %d bytes", len(decompressedData))
-		debugFile := fmt.Sprintf("%s.png", filename)
-		writeCMPToPNG(decompressedData, debugFile, 320, 200)
+		return decompressedData
 	}
-
 }
