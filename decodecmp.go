@@ -10,9 +10,9 @@ import (
 func setupLogging() {
 	logFile, err := os.OpenFile("op.log", os.O_CREATE|os.O_WRONLY, 0666)
 	if err != nil {
+		errorAndExit("Couldnt open log file")
 		// handle error
 	}
-	defer logFile.Close()
 
 	multiWriter := io.MultiWriter(os.Stderr, logFile)
 
@@ -34,6 +34,7 @@ func main() {
 	fmt.Println("./decodecmp dataFile paletteFile ouputImageFile")
 	if len(os.Args) != 4 {
 		errorAndExit("Usage : ./decodecmp dataFile paletteFile ouputImageFile")
+	setupLogging()
 	}
 
 	dataFile := os.Args[1]
