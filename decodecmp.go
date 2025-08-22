@@ -51,8 +51,6 @@ func main() {
 	palette := decodePalette(paletteData)
 	decompressedData := decodeCmp(dataFile, CMPData, palette)
 
-	fmt.Println(palette)
-
 	fmt.Printf("Writing %s\n", ImageFile)
 	writeCMPToPNG(decompressedData, ImageFile, palette, 320, 200)
 
