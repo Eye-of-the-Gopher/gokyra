@@ -7,7 +7,7 @@ import (
 	"os"
 )
 
-func main() {
+func setupLogging() {
 	logFile, err := os.OpenFile("op.log", os.O_CREATE|os.O_WRONLY, 0666)
 	if err != nil {
 		// handle error
@@ -28,14 +28,26 @@ func main() {
 			},
 		}))
 	slog.SetDefault(logger)
+}
+
+func main() {
 	fmt.Println("./decodecmp dataFile paletteFile ouputImageFile")
+	if len(os.Args) != 4 {
+		errorAndExit("Usage : ./decodecmp dataFile paletteFile ouputImageFile")
+	}
 
 	dataFile := os.Args[1]
 	paletteFile := os.Args[2]
 	ImageFile := os.Args[3]
 
-	CMPData, _ := os.ReadFile(dataFile)
-	paletteData, _ := os.ReadFile(paletteFile)
+	CMPData, err := os.ReadFile(dataFile)
+	if err != nil {
+		errorAndExit("Can't read data file %s", dataFile)
+	}
+	paletteData, err := os.ReadFile(paletteFile)
+	if err != nil {
+		errorAndExit("Can't read palette file %s", paletteFile)
+	}
 	palette := decodePalette(paletteData)
 	decompressedData := decodeCmp(dataFile, CMPData, palette)
 

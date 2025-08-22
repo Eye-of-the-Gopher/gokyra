@@ -45,3 +45,8 @@ func bytesToBinary(data []byte) string {
 	}
 	return result.String()
 }
+
+func errorAndExit(message string, args ...any) {
+	fmt.Fprintf(os.Stderr, message, args...)
+	os.Exit(-1)
+}
