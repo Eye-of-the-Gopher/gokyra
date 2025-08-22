@@ -102,33 +102,23 @@ func parseCmpBody(header CMPHeader, input []byte, palette color.Palette) ([]byte
 
 		} else if current == 0xff {
 			begin := inputPos
-			if commandCount == 1238 {
-				inputPos += 5
+			pattern := bytesToBinary(input[inputPos : inputPos+5])
+			count := int(binary.LittleEndian.Uint16(input[inputPos+1 : inputPos+3]))
+			pos := int(binary.LittleEndian.Uint16(input[inputPos+3 : inputPos+5]))
+			var target int
+			if relativeMode {
+				target = outputPos - pos
 			} else {
-
-				pattern := bytesToBinary([]byte{
-					input[inputPos],
-					input[inputPos+1],
-					input[inputPos+2],
-					input[inputPos+3],
-					input[inputPos+4],
-				})
-				count := int(binary.LittleEndian.Uint16(input[inputPos+1 : inputPos+3]))
-				pos := int(binary.LittleEndian.Uint16(input[inputPos+3 : inputPos+5]))
-				var target int
-				if relativeMode {
-					target = outputPos - pos
-				} else {
-					target = pos
-				}
-				slog.Debug("C5:", "id", commandCount, "indone", inDone, "opdone", opDone, "count", count, "pattern", pattern, "to", target)
-				for range count {
-					output[outputPos] = output[target]
-					outputPos += 1
-					target += 1
-				}
-				inputPos += 5
+				target = pos
 			}
+			slog.Debug("C5:", "id", commandCount, "indone", inDone, "opdone", opDone, "count", count, "pattern", pattern, "to", target)
+			for range count {
+				output[outputPos] = output[target]
+				outputPos += 1
+				target += 1
+			}
+			inputPos += 5
+
 			if inputPos != begin+5 {
 				panic("C5 Increment wrong")
 			}
