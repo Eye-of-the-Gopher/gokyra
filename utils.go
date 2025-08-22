@@ -5,6 +5,7 @@ import (
 	"image"
 	"image/color"
 	"image/png"
+	"log/slog"
 	"os"
 	"strings"
 )
@@ -49,4 +50,25 @@ func bytesToBinary(data []byte) string {
 func errorAndExit(message string, args ...any) {
 	fmt.Fprintf(os.Stderr, message, args...)
 	os.Exit(-1)
+}
+func setupLogging(logfile string) {
+	logFile, err := os.OpenFile(logfile, os.O_CREATE|os.O_WRONLY, 0666)
+	if err != nil {
+		errorAndExit("Couldnt open log file: %v", err)
+	}
+
+	multiWriter := io.MultiWriter(os.Stderr, logFile)
+
+	logger := slog.New(slog.NewTextHandler(
+		multiWriter,
+		&slog.HandlerOptions{
+			Level: slog.LevelDebug,
+			ReplaceAttr: func(groups []string, a slog.Attr) slog.Attr {
+				if a.Key == slog.TimeKey {
+					return slog.Attr{}
+				}
+				return a
+			},
+		}))
+	slog.SetDefault(logger)
 }
