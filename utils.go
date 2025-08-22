@@ -11,6 +11,14 @@ import (
 	"strings"
 )
 
+func dumpList[T any](l []T, header string) {
+	fmt.Println(header)
+	for idx, i := range l {
+		fmt.Printf("%8v : %v\n", idx, i)
+	}
+
+}
+
 func writeCMPToPNG(data []byte, filename string, palette color.Palette, width int, height int) error {
 	// Create a new grayscale image
 	img := image.NewRGBA(image.Rect(0, 0, width, height))
