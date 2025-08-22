@@ -6,3 +6,4 @@ tmp/
 decodecmp
 unpak
 showpalette
+*.log
