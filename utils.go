@@ -52,6 +52,12 @@ func errorAndExit(message string, args ...any) {
 	fmt.Fprintf(os.Stderr, message, args...)
 	os.Exit(-1)
 }
+
+func writeMIDI(data []byte, fname string) error {
+	slog.Debug("Writing", "name", fname)
+	return nil
+}
+
 func setupLogging(logfile string) {
 	logFile, err := os.OpenFile(logfile, os.O_CREATE|os.O_WRONLY, 0666)
 	if err != nil {
