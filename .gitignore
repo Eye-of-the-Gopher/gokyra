@@ -3,7 +3,9 @@ assets/
 *_files
 *.CMP.png
 tmp/
+
+*.log
 ./decodecmp
 ./unpak
 ./showpalette
-*.log
+./decodemaz
