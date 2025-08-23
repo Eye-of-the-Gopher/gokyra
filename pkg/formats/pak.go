@@ -1,4 +1,4 @@
-package main
+package formats
 
 import (
 	"encoding/binary"
@@ -10,11 +10,11 @@ import (
 )
 
 type PakData struct {
-	name string
-	data []byte
+	Name string
+	Data []byte
 }
 
-func extractPakFile(pakfile string) ([]PakData, error) {
+func ExtractPakFile(pakfile string) ([]PakData, error) {
 	filenames := []string{}
 	offsets := []uint32{}
 	slog.Info("extracting Pakfile", "name", pakfile)
@@ -102,21 +102,21 @@ func extractPakFile(pakfile string) ([]PakData, error) {
 
 		}
 		t := PakData{
-			name: filename,
-			data: data,
+			Name: filename,
+			Data: data,
 		}
 		ret[i] = t
 	}
 	return ret, nil
 }
 
-func writePakData(data []PakData, basedir string) {
+func WritePakData(data []PakData, basedir string) {
 	os.Mkdir(basedir, 0755)
 
 	for i := range data {
 		pakFile := data[i]
-		name := pakFile.name
-		contents := pakFile.data
+		name := pakFile.Name
+		contents := pakFile.Data
 		opfile := filepath.Join(basedir, name)
 		f, err := os.Create(opfile)
 

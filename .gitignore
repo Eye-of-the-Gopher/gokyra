@@ -4,6 +4,6 @@ assets/
 *.CMP.png
 tmp/
 decodecmp
-unpak
+./unpak
 showpalette
 *.log

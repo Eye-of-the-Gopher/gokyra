@@ -5,6 +5,8 @@ import (
 	"log/slog"
 	"os"
 	"path"
+
+	"github.com/nibrahim/eye-of-the-gopher/pkg/formats"
 )
 
 func setLogger() {
@@ -16,15 +18,14 @@ func setLogger() {
 }
 
 func main() {
-	setLogger()
 	slog.Info("Starting program")
-	unpakked, _ := extractPakFile(os.Args[1])
+	unpakked, _ := formats.ExtractPakFile(os.Args[1])
 	opdir := os.Args[2]
 
 	for i := range unpakked {
-		opfile := path.Join(opdir, unpakked[i].name)
+		opfile := path.Join(opdir, unpakked[i].Name)
 		fmt.Println("Writing ", opfile)
-		os.WriteFile(opfile, unpakked[i].data, 0644)
+		os.WriteFile(opfile, unpakked[i].Data, 0644)
 	}
 
 }
