@@ -22,14 +22,8 @@ func main() {
 		utils.ErrorAndExit("Can't read data file %s", dataFile)
 	}
 
-	decompressedData := formats.DecodeMAZ(dataFile, mazData)
-	if err != nil {
-		utils.ErrorAndExit("Error processing file %s: %v", dataFile, err)
-	}
-
-	formats.DrawMap(decompressedData, outputFile)
-	if err != nil {
-		utils.ErrorAndExit("Can't write converted music data to file %s: %v", outputFile, err)
-	}
+	plan := formats.DecodeMAZ(dataFile, mazData)
+	plan.Validate()
+	plan.DrawPlan(outputFile)
 
 }
