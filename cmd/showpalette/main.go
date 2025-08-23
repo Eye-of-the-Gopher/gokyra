@@ -8,6 +8,7 @@ import (
 	"image/png"
 	"os"
 
+	"github.com/nibrahim/eye-of-the-gopher/internal/utils"
 	"github.com/nibrahim/eye-of-the-gopher/pkg/formats"
 	"golang.org/x/image/font"
 	"golang.org/x/image/font/basicfont"
@@ -77,7 +78,11 @@ func drawText(img *image.RGBA, text string, x, y int, col color.RGBA) {
 }
 
 func main() {
-	fmt.Println("./decodecmp dataFile paletteFile ouputImageFile")
+	utils.SetupLogging("showpalette.log")
+	if len(os.Args) != 3 {
+		utils.ErrorAndExit("Usage: ./showpalette dataFile paletteFile ouputImageFile")
+	}
+
 	paletteFile := os.Args[1]
 	opFile := os.Args[2]
 
