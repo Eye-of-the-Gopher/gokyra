@@ -2,24 +2,23 @@ package main
 
 import (
 	"fmt"
-	"log/slog"
 	"os"
 	"path"
 
+	"github.com/nibrahim/eye-of-the-gopher/internal/utils"
 	"github.com/nibrahim/eye-of-the-gopher/pkg/formats"
 )
 
-func setLogger() {
-	logger := slog.New(slog.NewTextHandler(
-		os.Stderr,
-		&slog.HandlerOptions{Level: slog.LevelDebug}))
-	slog.SetDefault(logger)
-
-}
-
 func main() {
-	slog.Info("Starting program")
-	unpakked, _ := formats.ExtractPakFile(os.Args[1])
+	utils.SetupLogging("debug-unpak.log")
+	if len(os.Args) == 3 {
+		utils.ErrorAndExit("Usage: unpak pakfile outputDirectory")
+	}
+
+	unpakked, err := formats.ExtractPakFile(os.Args[1])
+	if err != nil {
+		utils.ErrorAndExit("Could not unpack file: %v", err)
+	}
 	opdir := os.Args[2]
 
 	for i := range unpakked {
