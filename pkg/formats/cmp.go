@@ -1,4 +1,4 @@
-package main
+package formats
 
 import (
 	"crypto/md5"
@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"image/color"
 	"log/slog"
+
+	"github.com/nibrahim/eye-of-the-gopher/internal/utils"
 )
 
 type CMPHeader struct {
@@ -39,7 +41,8 @@ func parseCmpBody(header CMPHeader, input []byte, palette color.Palette) ([]byte
 	inputPos := 0
 	outputPos := 0
 	var relativeMode bool
-	firstBytePattern := bytesToBinary([]byte{input[0]})
+	firstBytePattern := utils.BytesToBinary([]byte{input[0]})
+
 	commandCount := 0
 	slog.Debug("First byte", "pattern", firstBytePattern)
 	if input[0] == 0x0 {
@@ -62,7 +65,7 @@ func parseCmpBody(header CMPHeader, input []byte, palette color.Palette) ([]byte
 		} else if (current & 0x80) == 0 {
 			begin := inputPos
 			// Copy count bytes in output buffer from outputPos - pos to  outputPos
-			pattern := bytesToBinary([]byte{input[inputPos], input[inputPos+1]})
+			pattern := utils.BytesToBinary([]byte{input[inputPos], input[inputPos+1]})
 			count := ((current & 0x70) >> 4) + 3
 			tpos0 := current & 0x0f                  // Lower nibble of the current byte
 			tpos1 := int(tpos0) << 8                 // Moves it a byte to the left so now, we have 12 bits with the above 4 as the most significant bits
@@ -85,7 +88,7 @@ func parseCmpBody(header CMPHeader, input []byte, palette color.Palette) ([]byte
 			}
 		} else if current == 0xfe {
 			begin := inputPos
-			pattern := bytesToBinary([]byte{input[inputPos], input[inputPos+1], input[inputPos+2], input[inputPos+3]})
+			pattern := utils.BytesToBinary([]byte{input[inputPos], input[inputPos+1], input[inputPos+2], input[inputPos+3]})
 			inputPos += 1                                                     // Leave command and Go to count byte 1
 			count := binary.LittleEndian.Uint16(input[inputPos : inputPos+2]) // Read Count byte 1 and 2
 			inputPos += 2                                                     // Go to value
@@ -102,7 +105,7 @@ func parseCmpBody(header CMPHeader, input []byte, palette color.Palette) ([]byte
 
 		} else if current == 0xff {
 			begin := inputPos
-			pattern := bytesToBinary(input[inputPos : inputPos+5])
+			pattern := utils.BytesToBinary(input[inputPos : inputPos+5])
 			count := int(binary.LittleEndian.Uint16(input[inputPos+1 : inputPos+3]))
 			pos := int(binary.LittleEndian.Uint16(input[inputPos+3 : inputPos+5]))
 			var target int
@@ -124,7 +127,7 @@ func parseCmpBody(header CMPHeader, input []byte, palette color.Palette) ([]byte
 			}
 		} else if (current & 0xc0) == 0x80 {
 			begin := inputPos
-			pattern := bytesToBinary([]byte{current})
+			pattern := utils.BytesToBinary([]byte{current})
 			count := current & 0x3f
 			slog.Debug("C1:", "id", commandCount, "indone", inDone, "opdone", opDone, "count", count, "pattern", pattern)
 			if count == 0 {
@@ -141,7 +144,7 @@ func parseCmpBody(header CMPHeader, input []byte, palette color.Palette) ([]byte
 			}
 		} else if (current & 0xc0) == 0xc0 {
 			begin := inputPos
-			pattern := bytesToBinary([]byte{
+			pattern := utils.BytesToBinary([]byte{
 				input[inputPos],
 				input[inputPos+1],
 				input[inputPos+2],
@@ -174,7 +177,7 @@ func parseCmpBody(header CMPHeader, input []byte, palette color.Palette) ([]byte
 		}
 		if commandCount > 1235 && commandCount < 1245 {
 			pngFname := fmt.Sprintf("/tmp/frames/frame-%05d.png", commandCount)
-			writeCMPToPNG(output, pngFname, palette, 320, 200)
+			utils.WriteCMPToPNG(output, pngFname, palette, 320, 200)
 		}
 
 	}
@@ -182,7 +185,7 @@ func parseCmpBody(header CMPHeader, input []byte, palette color.Palette) ([]byte
 	return output, nil
 }
 
-func decodeCmp(filename string, fileContents []byte, palette color.Palette) []byte {
+func DecodeCmp(filename string, fileContents []byte, palette color.Palette) []byte {
 	slog.Info("Decompressing CMP file", "name", filename)
 	header, checksum := parseCmpHeader(fileContents)
 	slog.Debug("Header obtained", "header", header.String(), "checksum", checksum)

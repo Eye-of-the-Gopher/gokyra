@@ -8,6 +8,7 @@ import (
 	"image/png"
 	"os"
 
+	"github.com/nibrahim/eye-of-the-gopher/pkg/formats"
 	"golang.org/x/image/font"
 	"golang.org/x/image/font/basicfont"
 	"golang.org/x/image/math/fixed"
@@ -81,7 +82,7 @@ func main() {
 	opFile := os.Args[2]
 
 	paletteData, _ := os.ReadFile(paletteFile)
-	palette := decodePalette(paletteData)
+	palette := formats.DecodePalette(paletteData)
 
 	debugPalette(palette, opFile)
 

@@ -1,11 +1,11 @@
-package main
+package formats
 
 import (
 	"image/color"
 	"log/slog"
 )
 
-func decodePalette(data []byte) color.Palette {
+func DecodePalette(data []byte) color.Palette {
 	ret := make(color.Palette, 256)
 	idx := 0
 	for i := 0; i < len(data); i += 3 {
