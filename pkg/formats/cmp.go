@@ -175,10 +175,6 @@ func parseCmpBody(header CMPHeader, input []byte, palette color.Palette) ([]byte
 			slog.Error("Corrupt file. This shouldn't happen")
 			break
 		}
-		if commandCount > 1235 && commandCount < 1245 {
-			pngFname := fmt.Sprintf("/tmp/frames/frame-%05d.png", commandCount)
-			utils.WriteCMPToPNG(output, pngFname, palette, 320, 200)
-		}
 
 	}
 
