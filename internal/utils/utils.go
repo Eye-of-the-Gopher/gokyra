@@ -2,15 +2,16 @@ package utils
 
 import (
 	"fmt"
-	"image"
-	"image/color"
-	"image/png"
 	"io"
 	"log/slog"
+	"math/rand/v2"
 	"os"
+	"path"
+	"path/filepath"
 	"strings"
 )
 
+// Creates log file and sets up logging properly
 func SetupLogging(logfile string) {
 	logFile, err := os.OpenFile(logfile, os.O_CREATE|os.O_WRONLY, 0666)
 	if err != nil {
@@ -33,32 +34,7 @@ func SetupLogging(logfile string) {
 	slog.SetDefault(logger)
 }
 
-func WriteCMPToPNG(data []byte, filename string, palette color.Palette, width int, height int) error {
-	// Create a new grayscale image
-	img := image.NewRGBA(image.Rect(0, 0, width, height))
-
-	// Fill the image with the raw data
-	for y := range height {
-		for x := range width {
-			index := y*width + x
-			if index < len(data) {
-				// Use the byte value directly as grayscale intensity
-				img.Set(x, y, palette[data[index]])
-			}
-		}
-	}
-
-	// Create the output file
-	file, err := os.Create(filename)
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-
-	// Encode as PNG
-	return png.Encode(file, img)
-}
-
+// Displays []data as a binary pattern
 func BytesToBinary(data []byte) string {
 	var result strings.Builder
 	for i, b := range data {
@@ -70,7 +46,28 @@ func BytesToBinary(data []byte) string {
 	return result.String()
 }
 
+// Prints given error message on stderr and exits
 func ErrorAndExit(message string, args ...any) {
-	fmt.Fprintf(os.Stderr, message, args...)
+	fmt.Fprintf(os.Stderr, "\n"+message+"\n", args...)
 	os.Exit(-1)
+}
+
+// Takes fName.whatever and returns opDir/fName.ext
+func ImageName(fName string, newExt string, opDir string) string {
+	base := strings.ToLower(filepath.Base(fName))
+	ext := filepath.Ext(base)
+	withoutExt := strings.Trim(base, ext)
+	return path.Join(opDir, withoutExt+"."+newExt)
+}
+
+// Similar to Python's random.choice
+func RandChoice[T any](l []T, rng ...*rand.Rand) T {
+	var randInt func(int) int
+	if len(rng) == 1 {
+		t := rng[0]
+		randInt = t.IntN
+	} else {
+		randInt = rand.IntN
+	}
+	return l[randInt(len(l))]
 }
