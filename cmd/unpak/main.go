@@ -11,7 +11,7 @@ import (
 
 func main() {
 	utils.SetupLogging("debug-unpak.log")
-	if len(os.Args) == 3 {
+	if len(os.Args) != 3 {
 		utils.ErrorAndExit("Usage: unpak pakfile outputDirectory")
 	}
 
