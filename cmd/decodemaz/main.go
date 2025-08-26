@@ -23,7 +23,7 @@ func main() {
 	}
 
 	plan := formats.DecodeMAZ(dataFile, mazData)
-	plan.Validate()
+	// plan.Validate()
 	plan.DrawPlan(outputFile)
 
 }
