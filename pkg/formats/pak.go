@@ -9,12 +9,12 @@ import (
 	"path/filepath"
 )
 
-type PakData struct {
+type AssetData struct {
 	Name string
 	Data []byte
 }
 
-func ExtractPakFile(pakfile string) ([]PakData, error) {
+func ExtractPakFile(pakfile string) ([]AssetData, error) {
 	filenames := []string{}
 	offsets := []uint32{}
 	slog.Info("extracting Pakfile", "name", pakfile)
@@ -73,7 +73,7 @@ func ExtractPakFile(pakfile string) ([]PakData, error) {
 		slog.Debug("Entry parsed", "offset", offset, "name", fname)
 	}
 
-	ret := make([]PakData, len(offsets))
+	ret := make([]AssetData, len(offsets))
 	stat, err := f.Stat()
 	if err != nil {
 		return nil, fmt.Errorf("could not stat file: %w", err)
@@ -101,7 +101,7 @@ func ExtractPakFile(pakfile string) ([]PakData, error) {
 			return nil, fmt.Errorf("short read while unpacking %s (position : %d): %w", filename, i, err)
 
 		}
-		t := PakData{
+		t := AssetData{
 			Name: filename,
 			Data: data,
 		}
@@ -110,7 +110,7 @@ func ExtractPakFile(pakfile string) ([]PakData, error) {
 	return ret, nil
 }
 
-func WritePakData(data []PakData, basedir string) {
+func WriteAssetData(data []AssetData, basedir string) {
 	os.Mkdir(basedir, 0755)
 
 	for i := range data {

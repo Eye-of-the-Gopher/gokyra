@@ -5,9 +5,10 @@ assets/
 tmp/
 
 *.log
-./decodecmp
-./unpak
-./showpalette
-./decodemaz
+/decodecmp
+/unpak
+/showpalette
+/decodemaz
+/eye-of-the-gopher
 
 my_assets

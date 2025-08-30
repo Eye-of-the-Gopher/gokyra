@@ -2,12 +2,18 @@ package main
 
 import (
 	"log"
+	"os"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
+	"github.com/nibrahim/eye-of-the-gopher/internal/utils"
+	"github.com/nibrahim/eye-of-the-gopher/pkg/assets"
+	"github.com/nibrahim/eye-of-the-gopher/pkg/formats"
 )
 
-type Game struct{}
+type Game struct {
+	assets []formats.AssetData
+}
 
 func (g *Game) Update() error {
 	return nil
@@ -21,10 +27,24 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeigh
 	return 320, 240
 }
 
+func NewGame(assetDir string) Game {
+	assets := assets.LoadClassicAssets(assetDir)
+	ret := Game{assets: assets}
+	return ret
+}
+
 func main() {
+	utils.SetupLogging("eog.log")
+	if len(os.Args) != 2 {
+		utils.ErrorAndExit("Usage : %s asset_directory", os.Args[0])
+	}
+
+	assetDir := os.Args[1]
+	game := NewGame(assetDir)
+
 	ebiten.SetWindowSize(640, 480)
-	ebiten.SetWindowTitle("Hello, World!")
-	if err := ebiten.RunGame(&Game{}); err != nil {
+	ebiten.SetWindowTitle("Eye Of The Gopher")
+	if err := ebiten.RunGame(&game); err != nil {
 		log.Fatal(err)
 	}
 }
