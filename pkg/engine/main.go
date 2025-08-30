@@ -6,6 +6,8 @@ import (
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
+	"github.com/nibrahim/eye-of-the-gopher/pkg/assets"
+	"github.com/nibrahim/eye-of-the-gopher/pkg/formats"
 )
 
 const (
@@ -13,7 +15,15 @@ const (
 	screenHeight = 480
 )
 
-type Game struct{}
+type Game struct {
+	assets formats.Assets
+}
+
+func NewGame() *Game {
+	assets.LoadClassicAssets(assetDir string)
+	ret := Game{}
+	return &ret
+}
 
 func (g *Game) Update() error {
 	return nil

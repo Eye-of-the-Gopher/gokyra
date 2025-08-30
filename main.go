@@ -7,12 +7,16 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/nibrahim/eye-of-the-gopher/internal/utils"
-	"github.com/nibrahim/eye-of-the-gopher/pkg/assets"
+	assetLoader "github.com/nibrahim/eye-of-the-gopher/pkg/assets"
 	"github.com/nibrahim/eye-of-the-gopher/pkg/formats"
 )
 
 type Game struct {
-	assets []formats.AssetData
+	assets formats.Assets
+}
+
+func (g *Game) assetDump() {
+	g.assets.DumpAssets()
 }
 
 func (g *Game) Update() error {
@@ -28,8 +32,8 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeigh
 }
 
 func NewGame(assetDir string) Game {
-	assets := assets.LoadClassicAssets(assetDir)
-	ret := Game{assets: assets}
+	assets := assetLoader.LoadClassicAssets(assetDir)
+	ret := Game{assets: *assets}
 	return ret
 }
 
@@ -41,6 +45,7 @@ func main() {
 
 	assetDir := os.Args[1]
 	game := NewGame(assetDir)
+	game.assets.DumpAssets()
 
 	ebiten.SetWindowSize(640, 480)
 	ebiten.SetWindowTitle("Eye Of The Gopher")

@@ -13,14 +13,15 @@ type Assets struct {
 	assets map[string][]byte
 }
 
-type AssetData struct {
-	Name string
-	Data []byte
-}
-
 func NewAssets() *Assets {
 	return &Assets{
 		assets: make(map[string][]byte),
+	}
+}
+
+func (a *Assets) DumpAssets() {
+	for k, _ := range a.assets {
+		fmt.Println(k)
 	}
 }
 
