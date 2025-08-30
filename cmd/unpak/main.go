@@ -1,12 +1,10 @@
 package main
 
 import (
-	"fmt"
 	"os"
-	"path"
 
 	"github.com/nibrahim/eye-of-the-gopher/internal/utils"
-	"github.com/nibrahim/eye-of-the-gopher/pkg/formats"
+	unpak "github.com/nibrahim/eye-of-the-gopher/pkg/formats"
 )
 
 func main() {
@@ -15,16 +13,12 @@ func main() {
 		utils.ErrorAndExit("Usage: unpak pakfile outputDirectory")
 	}
 
-	unpakked, err := formats.ExtractPakFile(os.Args[1])
+	assets := unpak.NewAssets()
+	err := assets.LoadPakFile(os.Args[1], "")
 	if err != nil {
 		utils.ErrorAndExit("Could not unpack file: %v", err)
 	}
 	opdir := os.Args[2]
-
-	for i := range unpakked {
-		opfile := path.Join(opdir, unpakked[i].Name)
-		fmt.Println("Writing ", opfile)
-		os.WriteFile(opfile, unpakked[i].Data, 0644)
-	}
+	assets.WriteAssetData(opdir)
 
 }

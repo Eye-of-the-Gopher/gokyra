@@ -9,19 +9,37 @@ import (
 	"path/filepath"
 )
 
+type Assets struct {
+	assets map[string][]byte
+}
+
 type AssetData struct {
 	Name string
 	Data []byte
 }
 
-func ExtractPakFile(pakfile string) ([]AssetData, error) {
+func NewAssets() *Assets {
+	return &Assets{
+		assets: make(map[string][]byte),
+	}
+}
+
+func (a *Assets) GetAsset(name string, prefix string) ([]byte, error) {
+	value, exists := a.assets[name]
+	if !exists {
+		return nil, fmt.Errorf("No such asset %s with prefix %s", name, prefix)
+	}
+	return value, nil
+}
+
+func (a *Assets) LoadPakFile(pakfile string, prefix string) error {
 	filenames := []string{}
 	offsets := []uint32{}
-	slog.Info("extracting Pakfile", "name", pakfile)
+	slog.Info("Loading Pakfile", "name", pakfile)
 
 	f, err := os.Open(pakfile)
 	if err != nil {
-		return nil, fmt.Errorf("cannot open file: %w", err)
+		return fmt.Errorf("cannot open file: %w", err)
 	}
 	defer f.Close()
 
@@ -30,7 +48,7 @@ func ExtractPakFile(pakfile string) ([]AssetData, error) {
 			firstOffset := offsets[0]
 			t, err := f.Seek(0, io.SeekCurrent)
 			if err != nil {
-				return nil, fmt.Errorf("error while finding current file position: %w", err)
+				return fmt.Errorf("error while finding current file position: %w", err)
 			}
 
 			currentPos := uint32(t)
@@ -44,7 +62,7 @@ func ExtractPakFile(pakfile string) ([]AssetData, error) {
 		var offset uint32
 		err = binary.Read(f, binary.LittleEndian, &offset)
 		if err != nil {
-			return nil, fmt.Errorf("unexpected short read while looking for offset: %w", err)
+			return fmt.Errorf("unexpected short read while looking for offset: %w", err)
 		}
 
 		offsets = append(offsets, offset)
@@ -53,7 +71,7 @@ func ExtractPakFile(pakfile string) ([]AssetData, error) {
 
 		err = binary.Read(f, binary.LittleEndian, &fnamechar)
 		if err != nil {
-			return nil, fmt.Errorf("unexpected short read while looking for name: %w", err)
+			return fmt.Errorf("unexpected short read while looking for name: %w", err)
 		}
 
 		fnamechars := make([]byte, 0)
@@ -64,7 +82,7 @@ func ExtractPakFile(pakfile string) ([]AssetData, error) {
 				break
 			}
 			if err != nil {
-				return nil, fmt.Errorf("unexpected short read while looking for name: %w", err)
+				return fmt.Errorf("unexpected short read while looking for name: %w", err)
 			}
 			fnamechars = append(fnamechars, fnamechar)
 		}
@@ -73,10 +91,9 @@ func ExtractPakFile(pakfile string) ([]AssetData, error) {
 		slog.Debug("Entry parsed", "offset", offset, "name", fname)
 	}
 
-	ret := make([]AssetData, len(offsets))
 	stat, err := f.Stat()
 	if err != nil {
-		return nil, fmt.Errorf("could not stat file: %w", err)
+		return fmt.Errorf("could not stat file: %w", err)
 	}
 
 	fileLimit := uint64(stat.Size())
@@ -93,30 +110,27 @@ func ExtractPakFile(pakfile string) ([]AssetData, error) {
 		slog.Debug("Extracting", "file", filename, "From", start, "To", end)
 		_, err = f.Seek(int64(start), io.SeekStart)
 		if err != nil {
-			return nil, fmt.Errorf("could not extract %s from %s at offset %d: %w", filename, pakfile, start, err)
+			return fmt.Errorf("could not extract %s from %s at offset %d: %w", filename, pakfile, start, err)
 		}
 		data := make([]byte, end-start)
 		n, err := f.Read(data)
 		if err != nil || n != len(data) {
-			return nil, fmt.Errorf("short read while unpacking %s (position : %d): %w", filename, i, err)
+			return fmt.Errorf("short read while unpacking %s (position : %d): %w", filename, i, err)
 
 		}
-		t := AssetData{
-			Name: filename,
-			Data: data,
+		if prefix != "" {
+			filename = fmt.Sprintf("%s/%s", prefix, filename)
 		}
-		ret[i] = t
+
+		a.assets[filename] = data
 	}
-	return ret, nil
+	return nil
 }
 
-func WriteAssetData(data []AssetData, basedir string) {
+func (a *Assets) WriteAssetData(basedir string) {
 	os.Mkdir(basedir, 0755)
 
-	for i := range data {
-		pakFile := data[i]
-		name := pakFile.Name
-		contents := pakFile.Data
+	for name, data := range a.assets {
 		opfile := filepath.Join(basedir, name)
 		f, err := os.Create(opfile)
 
@@ -124,8 +138,8 @@ func WriteAssetData(data []AssetData, basedir string) {
 			slog.Error("Couldn't write", "name", name)
 		} else {
 			defer f.Close()
-			slog.Debug("Writing", "name", name, "size", len(contents))
-			f.Write(contents)
+			slog.Debug("Writing", "name", name, "size", len(data))
+			f.Write(data)
 		}
 	}
 }
