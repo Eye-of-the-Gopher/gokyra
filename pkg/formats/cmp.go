@@ -4,6 +4,7 @@ import (
 	"crypto/md5"
 	"encoding/binary"
 	"fmt"
+	"image"
 	"image/color"
 	"log/slog"
 
@@ -179,6 +180,23 @@ func parseCmpBody(header CMPHeader, input []byte, palette color.Palette) ([]byte
 	}
 
 	return output, nil
+}
+
+// Converts a CMP data stream in data to an image.Image
+func CMPToImage(data []byte, palette color.Palette, width int, height int) image.Image {
+	slog.Debug("Converting CMP PNG", "length", len(data))
+	img := image.NewRGBA(image.Rect(0, 0, width, height))
+
+	// Fill the image with the raw data
+	for y := range height {
+		for x := range width {
+			index := y*width + x
+			if index < len(data) {
+				img.Set(x, y, palette[data[index]])
+			}
+		}
+	}
+	return img
 }
 
 func DecodeCmp(filename string, fileContents []byte, palette color.Palette) []byte {

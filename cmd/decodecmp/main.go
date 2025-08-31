@@ -3,8 +3,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"image"
-	"image/color"
 	"image/png"
 	"log/slog"
 	"os"
@@ -12,33 +10,6 @@ import (
 	"github.com/nibrahim/eye-of-the-gopher/internal/utils"
 	"github.com/nibrahim/eye-of-the-gopher/pkg/formats"
 )
-
-// Writes extracted CMP bitmap pattern to PNG
-func writeCMPToPNG(data []byte, filename string, palette color.Palette, width int, height int) error {
-	slog.Debug("Writing PNG", "length", len(data), "to", filename)
-	img := image.NewRGBA(image.Rect(0, 0, width, height))
-
-	// Fill the image with the raw data
-	for y := range height {
-		for x := range width {
-			index := y*width + x
-			if index < len(data) {
-				img.Set(x, y, palette[data[index]])
-			}
-		}
-	}
-
-	// Create the output file
-	file, err := os.Create(filename)
-	if err != nil {
-		utils.ErrorAndExit("Could not create output file: %v", err)
-		return err
-	}
-	defer file.Close()
-
-	// Encode as PNG
-	return png.Encode(file, img)
-}
 
 func main() {
 	utils.SetupLogging("decode-cmp.log")
@@ -81,9 +52,20 @@ func main() {
 		}
 		decompressedData := formats.DecodeCmp(imageFile, CMPData, palette)
 
-		writeCMPToPNG(decompressedData, outputFile, palette, 320, 200)
+		img := formats.CMPToImage(decompressedData, palette, 320, 200)
+
+		file, err := os.Create(outputFile)
+		if err != nil {
+			utils.ErrorAndExit("Could not create output file: %v", err)
+		}
+		defer file.Close()
+
+		// Encode as PNG
+		png.Encode(file, img)
 	}
 
 	os.Exit(0)
 
 }
+
+// Create the output file
