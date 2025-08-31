@@ -3,11 +3,29 @@ package formats
 import (
 	"encoding/binary"
 	"fmt"
+	"image"
 	"io"
 	"log/slog"
 	"os"
+	"path"
 	"path/filepath"
+	"strings"
 )
+
+type Sprite struct {
+	image image.Image
+	name  string
+}
+
+type Asset struct {
+	data []byte
+}
+
+func NewAsset(fname string, data []byte) Asset {
+	return Asset{
+		data: data,
+	}
+}
 
 type Assets struct {
 	assets map[string][]byte
@@ -19,18 +37,33 @@ func NewAssets() *Assets {
 	}
 }
 
-func (a *Assets) DumpAssets() {
-	for k, _ := range a.assets {
-		fmt.Println(k)
+func (a *Assets) GetSprite(name string, prefix string) (*Sprite, error) {
+	ext := strings.ToLower(path.Ext(name))
+	slog.Debug("Loading sprite", "name", name, "extension", ext)
+	if ext != ".cmp" && ext != ".cps" {
+		return nil, fmt.Errorf("Cannot fetch %s as a sprite. Only CPS and CMP", name)
+	} else {
+		data, exists := a.assets[name]
+		if exists {
+			//  formats.CMPToImage(data []byte, palette color.Palette, width int, height int)
+			img := image.NewRGBA(image.Rect(0, 0, 10, 10))
+			slog.Debug("Sending back", "len", len(data))
+			return &Sprite{
+				name:  name,
+				image: img,
+			}, nil
+		} else {
+			return nil, fmt.Errorf("Cannot fetch %s: No such asset", name)
+		}
+
 	}
+
 }
 
-func (a *Assets) GetAsset(name string, prefix string) ([]byte, error) {
-	value, exists := a.assets[name]
-	if !exists {
-		return nil, fmt.Errorf("No such asset %s with prefix %s", name, prefix)
+func (a *Assets) DumpAssets() {
+	for k := range a.assets {
+		fmt.Println(k)
 	}
-	return value, nil
 }
 
 func (a *Assets) LoadPakFile(pakfile string, prefix string) error {

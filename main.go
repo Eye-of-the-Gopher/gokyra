@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
 
@@ -45,7 +46,13 @@ func main() {
 
 	assetDir := os.Args[1]
 	game := NewGame(assetDir)
-	game.assets.DumpAssets()
+	eg := "DWARF.CPS"
+	t, err := game.assets.GetSprite(eg, "")
+	if err != nil {
+		utils.ErrorAndExit("Couldn't load File %s: %v", eg, err)
+	} else {
+		fmt.Println(t)
+	}
 
 	ebiten.SetWindowSize(640, 480)
 	ebiten.SetWindowTitle("Eye Of The Gopher")
