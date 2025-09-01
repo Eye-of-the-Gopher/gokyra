@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"image"
+	"image/color"
 	"io"
 	"log/slog"
 	"os"
@@ -13,7 +14,7 @@ import (
 )
 
 type Sprite struct {
-	image image.Image
+	Image image.Image
 	name  string
 }
 
@@ -37,7 +38,23 @@ func NewAssets() *Assets {
 	}
 }
 
-func (a *Assets) GetSprite(name string, prefix string) (*Sprite, error) {
+func (a *Assets) GetPalette(name string) (color.Palette, error) {
+	ext := strings.ToLower(path.Ext(name))
+	slog.Debug("Loading palette", "name", name, "extension", ext)
+	if ext != ".pal" && ext != ".col" {
+		return nil, fmt.Errorf("Cannot fetch %s as a sprite. Only PAL and COL", name)
+	} else {
+		data, exists := a.assets[name]
+		if exists {
+			pal := DecodePalette(data)
+			return pal, nil
+		} else {
+			return nil, fmt.Errorf("Cannot fetch %s: No such asset", name)
+		}
+	}
+}
+
+func (a *Assets) GetSprite(name string, palette color.Palette, width int, height int, prefix string) (*Sprite, error) {
 	ext := strings.ToLower(path.Ext(name))
 	slog.Debug("Loading sprite", "name", name, "extension", ext)
 	if ext != ".cmp" && ext != ".cps" {
@@ -45,12 +62,11 @@ func (a *Assets) GetSprite(name string, prefix string) (*Sprite, error) {
 	} else {
 		data, exists := a.assets[name]
 		if exists {
-			//  formats.CMPToImage(data []byte, palette color.Palette, width int, height int)
-			img := image.NewRGBA(image.Rect(0, 0, 10, 10))
+			img := CMPToImage(data, palette, width, height)
 			slog.Debug("Sending back", "len", len(data))
 			return &Sprite{
 				name:  name,
-				image: img,
+				Image: img,
 			}, nil
 		} else {
 			return nil, fmt.Errorf("Cannot fetch %s: No such asset", name)
