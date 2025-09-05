@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log/slog"
 	"os"
 
 	"github.com/nibrahim/eye-of-the-gopher/internal/utils"
@@ -8,8 +9,7 @@ import (
 )
 
 func main() {
-
-	utils.SetupLogging("maz-decode.log")
+	formats.InitLogger(slog.LevelError, slog.LevelError, slog.LevelError, slog.LevelError)
 	if len(os.Args) != 3 {
 		utils.ErrorAndExit("Usage : ./decodemaz mazFile outputFile")
 	}

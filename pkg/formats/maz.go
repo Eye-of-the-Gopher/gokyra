@@ -4,7 +4,6 @@ import (
 	"encoding/binary"
 	"fmt"
 	"image/color"
-	"log/slog"
 	"os"
 
 	"github.com/fogleman/gg"
@@ -129,12 +128,12 @@ func (p *Plan) drawRoom(dc *gg.Context, x int, y int, label string, room Room) {
 	py := float64(p.border*2 + (y * p.cellSize))
 	c := float64(p.cellSize)
 
-	slog.Debug("Room Info", "x", x, "y", y, "px", px, "py", py, "room", room)
+	MazLogger.Debug("Room Info", "x", x, "y", y, "px", px, "py", py, "room", room)
 
 	doorWidth := float64(p.cellSize / 4)
 	wallThickness := float64(p.cellSize / 5)
 	doorThickness := float64(wallThickness) * 1.5
-	slog.Debug("Component dimensions", "doorWidth", doorWidth, "wallThickness", wallThickness, "doorThickness", doorThickness)
+	MazLogger.Debug("Component dimensions", "doorWidth", doorWidth, "wallThickness", wallThickness, "doorThickness", doorThickness)
 
 	ns := room.N
 	ss := room.S
@@ -151,10 +150,10 @@ func (p *Plan) drawRoom(dc *gg.Context, x int, y int, label string, room Room) {
 	dc.DrawString(label, px+5, py+c/2)
 
 	if ns != 0 {
-		slog.Debug("North wall")
+		MazLogger.Debug("North wall")
 		drawRect(dc, px, py, c, wallThickness, true, true, false) // Draw North wall
 		if 3 <= ns && ns <= 22 {
-			slog.Debug("North Door")
+			MazLogger.Debug("North Door")
 			drawRect(dc, px+c/2-doorWidth, py, doorWidth*2, doorThickness, false, true, true) // Draw door on this wall
 		}
 	} else {
@@ -165,10 +164,10 @@ func (p *Plan) drawRoom(dc *gg.Context, x int, y int, label string, room Room) {
 	}
 
 	if ss != 0 {
-		slog.Debug("South wall")
+		MazLogger.Debug("South wall")
 		drawRect(dc, px, py+float64(p.cellSize)-wallThickness, float64(p.cellSize), wallThickness, true, true, false) // Draw a south wall
 		if 3 <= ss && ss <= 22 {
-			slog.Debug("South door")
+			MazLogger.Debug("South door")
 			drawRect(dc, px+c/2-doorWidth, py+float64(p.cellSize)-(doorThickness), doorWidth*2, doorThickness, false, true, true) // Draw door on this wall
 		}
 	} else {
@@ -216,7 +215,7 @@ func (p *Plan) drawRoom(dc *gg.Context, x int, y int, label string, room Room) {
 }
 
 func (p *Plan) DrawPlan(fname string) {
-	slog.Debug("Parameters", "size", p.size, "border", p.border, "cellSize", p.cellSize)
+	MazLogger.Debug("Parameters", "size", p.size, "border", p.border, "cellSize", p.cellSize)
 
 	img, err := gg.LoadPNG("ip2.png")
 	if err != nil {
@@ -237,7 +236,7 @@ func (p *Plan) DrawPlan(fname string) {
 
 	}
 
-	dc.SavePNG("op.png")
+	dc.SavePNG(fname)
 }
 
 func DecodeMAZ(mazFileName string, input []byte) Plan {
@@ -249,7 +248,7 @@ func DecodeMAZ(mazFileName string, input []byte) Plan {
 	tileSize := binary.LittleEndian.Uint16(input[inputPos : inputPos+2])
 	inputPos += 2
 
-	slog.Debug("Header read", "width", width, "height", height, "tileSize", tileSize)
+	MazLogger.Debug("Header read", "width", width, "height", height, "tileSize", tileSize)
 
 	return NewPlan(input[inputPos:], 1800, 50)
 }

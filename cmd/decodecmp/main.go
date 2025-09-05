@@ -12,7 +12,7 @@ import (
 )
 
 func main() {
-	utils.SetupLogging("decode-cmp.log")
+	formats.InitLogger(slog.LevelDebug, slog.LevelError, slog.LevelError, slog.LevelDebug)
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Usage : %s [options] imageFile1 imageFile2 ...\n", os.Args[0])
 		fmt.Fprintf(os.Stderr, "\nOptions:\n")

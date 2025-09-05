@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"log/slog"
 	"os"
 
 	"github.com/hajimehoshi/ebiten/audio"
@@ -68,7 +69,8 @@ func NewGame(assetDir string, extraAssetDir string) Game {
 }
 
 func main() {
-	utils.SetupLogging("eog.log")
+	formats.InitLogger(slog.LevelError, slog.LevelError, slog.LevelError, slog.LevelError)
+
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Usage : %s [options] assetDirectory ...\n", os.Args[0])
 		fmt.Fprintf(os.Stderr, "\nOptions:\n")

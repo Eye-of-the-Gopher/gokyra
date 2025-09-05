@@ -12,8 +12,9 @@ import (
 )
 
 // Creates log file and sets up logging properly
-func SetupLogging(logfile string) {
-	logFile, err := os.OpenFile(logfile, os.O_CREATE|os.O_WRONLY, 0666)
+func InitLogger(name string, level slog.Level) *slog.Logger {
+	logFileName := strings.Join([]string{name, ".log"}, "")
+	logFile, err := os.OpenFile(logFileName, os.O_CREATE|os.O_WRONLY, 0666)
 	if err != nil {
 		ErrorAndExit("Couldnt open log file: %v", err)
 	}
@@ -23,15 +24,15 @@ func SetupLogging(logfile string) {
 	logger := slog.New(slog.NewTextHandler(
 		multiWriter,
 		&slog.HandlerOptions{
-			Level: slog.LevelDebug,
+			Level: level,
 			ReplaceAttr: func(groups []string, a slog.Attr) slog.Attr {
 				if a.Key == slog.TimeKey {
 					return slog.Attr{}
 				}
 				return a
 			},
-		}))
-	slog.SetDefault(logger)
+		})).With("component", name)
+	return logger
 }
 
 // Displays []data as a binary pattern

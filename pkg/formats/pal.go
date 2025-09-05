@@ -2,7 +2,6 @@ package formats
 
 import (
 	"image/color"
-	"log/slog"
 )
 
 func DecodePalette(data []byte) color.Palette {
@@ -31,7 +30,7 @@ func DecodePalette(data []byte) color.Palette {
 		ret[idx] = color.RGBA{uint8(brightR), uint8(brightG), uint8(brightB), 255}
 		idx += 1
 	}
-	slog.Debug("Palette created")
+	PalLogger.Debug("Palette created")
 	return ret
 
 }

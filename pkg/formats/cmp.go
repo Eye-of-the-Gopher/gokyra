@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"image"
 	"image/color"
-	"log/slog"
 
 	"github.com/nibrahim/eye-of-the-gopher/internal/utils"
 )
@@ -45,13 +44,13 @@ func parseCmpBody(header CMPHeader, input []byte, palette color.Palette) ([]byte
 	firstBytePattern := utils.BytesToBinary([]byte{input[0]})
 
 	commandCount := 0
-	slog.Debug("First byte", "pattern", firstBytePattern)
+	CmpLogger.Debug("First byte", "pattern", firstBytePattern)
 	if input[0] == 0x0 {
-		slog.Debug("Relative mode")
+		CmpLogger.Debug("Relative mode")
 		relativeMode = true
 		inputPos += 1
 	} else {
-		slog.Debug("Absolute mode")
+		CmpLogger.Debug("Absolute mode")
 		relativeMode = false
 	}
 
@@ -61,7 +60,7 @@ func parseCmpBody(header CMPHeader, input []byte, palette color.Palette) ([]byte
 		opDone := fmt.Sprintf("%06d/%06d (%.2f%%)", outputPos, len(output), (float64(outputPos)/float64(len(output)))*100)
 		current := input[inputPos]
 		if current == 0x80 {
-			slog.Debug("End of stream")
+			CmpLogger.Debug("End of stream")
 			break
 		} else if (current & 0x80) == 0 {
 			begin := inputPos
@@ -73,9 +72,9 @@ func parseCmpBody(header CMPHeader, input []byte, palette color.Palette) ([]byte
 			inputPos += 1                            // Get the next byte
 			pos := int(tpos1 + int(input[inputPos])) // Adds the next byte. So there's 12 bits now
 			source := outputPos - pos
-			slog.Debug("C2:", "id", commandCount, "indone", inDone, "opdone", opDone, "count", count, "pattern", pattern, "from", source)
+			CmpLogger.Debug("C2:", "id", commandCount, "indone", inDone, "opdone", opDone, "count", count, "pattern", pattern, "from", source)
 			if source < 0 || source >= len(output) {
-				slog.Error("C2 invalid source", "source", source, "outputPos", outputPos, "pos", pos)
+				CmpLogger.Error("C2 invalid source", "source", source, "outputPos", outputPos, "pos", pos)
 				return nil, fmt.Errorf("invalid source position")
 			}
 			for range count {
@@ -94,7 +93,7 @@ func parseCmpBody(header CMPHeader, input []byte, palette color.Palette) ([]byte
 			count := binary.LittleEndian.Uint16(input[inputPos : inputPos+2]) // Read Count byte 1 and 2
 			inputPos += 2                                                     // Go to value
 			value := input[inputPos]
-			slog.Debug("C4:", "id", commandCount, "indone", inDone, "opdone", opDone, "count", count, "pattern", pattern, "value", value)
+			CmpLogger.Debug("C4:", "id", commandCount, "indone", inDone, "opdone", opDone, "count", count, "pattern", pattern, "value", value)
 			for range count {
 				output[outputPos] = value
 				outputPos += 1
@@ -115,7 +114,7 @@ func parseCmpBody(header CMPHeader, input []byte, palette color.Palette) ([]byte
 			} else {
 				target = pos
 			}
-			slog.Debug("C5:", "id", commandCount, "indone", inDone, "opdone", opDone, "count", count, "pattern", pattern, "to", target)
+			CmpLogger.Debug("C5:", "id", commandCount, "indone", inDone, "opdone", opDone, "count", count, "pattern", pattern, "to", target)
 			for range count {
 				output[outputPos] = output[target]
 				outputPos += 1
@@ -130,9 +129,9 @@ func parseCmpBody(header CMPHeader, input []byte, palette color.Palette) ([]byte
 			begin := inputPos
 			pattern := utils.BytesToBinary([]byte{current})
 			count := current & 0x3f
-			slog.Debug("C1:", "id", commandCount, "indone", inDone, "opdone", opDone, "count", count, "pattern", pattern)
+			CmpLogger.Debug("C1:", "id", commandCount, "indone", inDone, "opdone", opDone, "count", count, "pattern", pattern)
 			if count == 0 {
-				slog.Debug("Count 0. End of stream")
+				CmpLogger.Debug("Count 0. End of stream")
 			}
 			inputPos += 1 // Go to data
 			for range count {
@@ -158,9 +157,9 @@ func parseCmpBody(header CMPHeader, input []byte, palette color.Palette) ([]byte
 			} else {
 				target = pos
 			}
-			slog.Debug("C3:", "id", commandCount, "indone", inDone, "opdone", opDone, "count", count, "pattern", pattern, "to", target)
+			CmpLogger.Debug("C3:", "id", commandCount, "indone", inDone, "opdone", opDone, "count", count, "pattern", pattern, "to", target)
 			if target < 0 || target >= len(output) {
-				slog.Error("C3 invalid target", "target", target, "outputPos", outputPos, "pos", pos)
+				CmpLogger.Error("C3 invalid target", "target", target, "outputPos", outputPos, "pos", pos)
 				return nil, fmt.Errorf("invalid target position")
 			}
 			for range count {
@@ -173,7 +172,7 @@ func parseCmpBody(header CMPHeader, input []byte, palette color.Palette) ([]byte
 				panic("C3 Increment wrong")
 			}
 		} else {
-			slog.Error("Corrupt file. This shouldn't happen")
+			CmpLogger.Error("Corrupt file. This shouldn't happen")
 			break
 		}
 
@@ -184,7 +183,7 @@ func parseCmpBody(header CMPHeader, input []byte, palette color.Palette) ([]byte
 
 // Converts a CMP data stream in data to an image.Image
 func CMPToImage(data []byte, palette color.Palette, width int, height int) image.Image {
-	slog.Debug("Converting CMP PNG", "length", len(data))
+	CmpLogger.Debug("Converting CMP PNG", "length", len(data))
 	img := image.NewRGBA(image.Rect(0, 0, width, height))
 
 	// Fill the image with the raw data
@@ -200,12 +199,12 @@ func CMPToImage(data []byte, palette color.Palette, width int, height int) image
 }
 
 func DecodeCmp(filename string, fileContents []byte, palette color.Palette) []byte {
-	slog.Info("Decompressing CMP file", "name", filename)
+	CmpLogger.Info("Decompressing CMP file", "name", filename)
 	header, checksum := parseCmpHeader(fileContents)
-	slog.Debug("Header obtained", "header", header.String(), "checksum", checksum)
+	CmpLogger.Debug("Header obtained", "header", header.String(), "checksum", checksum)
 	decompressedData, err := parseCmpBody(header, fileContents[10:], palette) // TODO : Probably need to check for compression type etc. here
 	if err != nil {
-		slog.Error("Aborted ", "error", err)
+		CmpLogger.Error("Aborted ", "error", err)
 		return []byte{}
 	} else {
 		return decompressedData

@@ -1,14 +1,16 @@
 package main
 
 import (
+	"log/slog"
 	"os"
 
 	"github.com/nibrahim/eye-of-the-gopher/internal/utils"
+	"github.com/nibrahim/eye-of-the-gopher/pkg/formats"
 	unpak "github.com/nibrahim/eye-of-the-gopher/pkg/formats"
 )
 
 func main() {
-	utils.SetupLogging("debug-unpak.log")
+	formats.InitLogger(slog.LevelError, slog.LevelError, slog.LevelDebug, slog.LevelError)
 	if len(os.Args) != 3 {
 		utils.ErrorAndExit("Usage: unpak pakfile outputDirectory")
 	}

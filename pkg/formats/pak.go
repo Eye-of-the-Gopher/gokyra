@@ -6,7 +6,6 @@ import (
 	"image"
 	"image/color"
 	"io"
-	"log/slog"
 	"os"
 	"path"
 	"path/filepath"
@@ -40,7 +39,7 @@ func NewAssets() *Assets {
 
 func (a *Assets) GetPalette(name string) (color.Palette, error) {
 	ext := strings.ToLower(path.Ext(name))
-	slog.Debug("Loading palette", "name", name, "extension", ext)
+	PakLogger.Debug("Loading palette", "name", name, "extension", ext)
 	if ext != ".pal" && ext != ".col" {
 		return nil, fmt.Errorf("Cannot fetch %s as a sprite. Only PAL and COL", name)
 	} else {
@@ -56,7 +55,7 @@ func (a *Assets) GetPalette(name string) (color.Palette, error) {
 
 func (a *Assets) GetSprite(name string, palette color.Palette, width int, height int, prefix string) (*Sprite, error) {
 	ext := strings.ToLower(path.Ext(name))
-	slog.Debug("Loading sprite", "name", name, "extension", ext)
+	PakLogger.Debug("Loading sprite", "name", name, "extension", ext)
 	if ext != ".cmp" && ext != ".cps" {
 		return nil, fmt.Errorf("Cannot fetch %s as a sprite. Only CPS and CMP", name)
 	} else {
@@ -64,7 +63,7 @@ func (a *Assets) GetSprite(name string, palette color.Palette, width int, height
 		if exists {
 			imgData := DecodeCmp(name, data, palette)
 			img := CMPToImage(imgData, palette, width, height)
-			slog.Debug("Sending back", "len", len(data))
+			PakLogger.Debug("Sending back", "len", len(data))
 			return &Sprite{
 				name:  name,
 				Image: img,
@@ -86,7 +85,7 @@ func (a *Assets) DumpAssets() {
 func (a *Assets) LoadPakFile(pakfile string, prefix string) error {
 	filenames := []string{}
 	offsets := []uint32{}
-	slog.Info("Loading Pakfile", "name", pakfile)
+	PakLogger.Info("Loading Pakfile", "name", pakfile)
 
 	f, err := os.Open(pakfile)
 	if err != nil {
@@ -104,7 +103,7 @@ func (a *Assets) LoadPakFile(pakfile string, prefix string) error {
 
 			currentPos := uint32(t)
 			if currentPos+4 >= firstOffset {
-				slog.Debug("header completed")
+				PakLogger.Debug("header completed")
 				break
 			}
 
@@ -139,7 +138,7 @@ func (a *Assets) LoadPakFile(pakfile string, prefix string) error {
 		}
 		fname := string(fnamechars)
 		filenames = append(filenames, fname)
-		slog.Debug("Entry parsed", "offset", offset, "name", fname)
+		PakLogger.Debug("Entry parsed", "offset", offset, "name", fname)
 	}
 
 	stat, err := f.Stat()
@@ -158,7 +157,7 @@ func (a *Assets) LoadPakFile(pakfile string, prefix string) error {
 		} else {
 			end = uint64(offsets[i+1])
 		}
-		slog.Debug("Extracting", "file", filename, "From", start, "To", end)
+		PakLogger.Debug("Extracting", "file", filename, "From", start, "To", end)
 		_, err = f.Seek(int64(start), io.SeekStart)
 		if err != nil {
 			return fmt.Errorf("could not extract %s from %s at offset %d: %w", filename, pakfile, start, err)
@@ -185,7 +184,7 @@ func (a *Assets) LoadExtraAssets(baseDir string) error {
 	}
 	for _, asset := range assets {
 		assetFile := path.Join(baseDir, asset.Name())
-		slog.Debug("Sideloading", "file", assetFile)
+		PakLogger.Debug("Sideloading", "file", assetFile)
 	}
 	return nil
 }
@@ -198,10 +197,10 @@ func (a *Assets) WriteAssetData(basedir string) {
 		f, err := os.Create(opfile)
 
 		if err != nil {
-			slog.Error("Couldn't write", "name", name)
+			PakLogger.Error("Couldn't write", "name", name)
 		} else {
 			defer f.Close()
-			slog.Debug("Writing", "name", name, "size", len(data))
+			PakLogger.Debug("Writing", "name", name, "size", len(data))
 			f.Write(data)
 		}
 	}
