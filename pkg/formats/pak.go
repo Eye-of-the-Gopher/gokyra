@@ -62,7 +62,8 @@ func (a *Assets) GetSprite(name string, palette color.Palette, width int, height
 	} else {
 		data, exists := a.assets[name]
 		if exists {
-			img := CMPToImage(data, palette, width, height)
+			imgData := DecodeCmp(name, data, palette)
+			img := CMPToImage(imgData, palette, width, height)
 			slog.Debug("Sending back", "len", len(data))
 			return &Sprite{
 				name:  name,
@@ -173,6 +174,18 @@ func (a *Assets) LoadPakFile(pakfile string, prefix string) error {
 		}
 
 		a.assets[filename] = data
+	}
+	return nil
+}
+
+func (a *Assets) LoadExtraAssets(baseDir string) error {
+	assets, err := os.ReadDir(baseDir)
+	if err != nil {
+		return fmt.Errorf("Couldn't side load extra assets: Couldn't read %s", baseDir)
+	}
+	for _, asset := range assets {
+		assetFile := path.Join(baseDir, asset.Name())
+		slog.Debug("Sideloading", "file", assetFile)
 	}
 	return nil
 }

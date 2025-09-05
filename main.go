@@ -1,11 +1,12 @@
 package main
 
 import (
+	"flag"
 	"fmt"
-	"image/png"
 	"log"
 	"os"
 
+	"github.com/hajimehoshi/ebiten/audio"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/nibrahim/eye-of-the-gopher/internal/utils"
@@ -13,8 +14,11 @@ import (
 )
 
 type Game struct {
-	assets formats.Assets
-	image  *ebiten.Image
+	assets        formats.Assets
+	image         *ebiten.Image
+	audioContext  *audio.Context // ONE for entire game
+	currentPlayer *audio.Player  // Changes per track
+
 }
 
 func (g *Game) assetDump() {
@@ -34,8 +38,8 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeigh
 	return 640, 480
 }
 
-func NewGame(assetDir string) Game {
-	assets := formats.LoadClassicAssets(assetDir)
+func NewGame(assetDir string, extraAssetDir string) Game {
+	assets := formats.LoadAssets(assetDir, extraAssetDir)
 	eg := "TITLE-V.CMP"
 	pal := "WESTWOOD.COL"
 	p, err := assets.GetPalette(pal)
@@ -45,27 +49,42 @@ func NewGame(assetDir string) Game {
 	} else {
 		fmt.Println(t)
 	}
+	audioContext, err := audio.NewContext(44100)
+	if err != nil {
+		return Game{
+			assets:       *assets,
+			image:        ebiten.NewImageFromImage(t.Image),
+			audioContext: audioContext,
+		}
 
-	f, _ := os.Create("/tmp/baz.png")
-	defer f.Close()
-	png.Encode(f, t.Image)
+	} else {
+		return Game{
+			assets:       *assets,
+			image:        ebiten.NewImageFromImage(t.Image),
+			audioContext: nil,
+		}
 
-	ret := Game{
-		assets: *assets,
-		image:  ebiten.NewImageFromImage(t.Image),
 	}
-
-	return ret
 }
 
 func main() {
 	utils.SetupLogging("eog.log")
-	if len(os.Args) != 2 {
-		utils.ErrorAndExit("Usage : %s asset_directory", os.Args[0])
+	flag.Usage = func() {
+		fmt.Fprintf(os.Stderr, "Usage : %s [options] assetDirectory ...\n", os.Args[0])
+		fmt.Fprintf(os.Stderr, "\nOptions:\n")
+		flag.PrintDefaults()
+		fmt.Fprintf(os.Stderr, "\nArguments:\n")
+		fmt.Fprintf(os.Stderr, "  assetDirectory    Directory with original EOB .pak files (6 of them)\n")
+	}
+	extraAssetDir := flag.String("extraAssetDir", "", "Directory to side load extra assets")
+	flag.Parse()
+
+	if flag.NArg() == 0 {
+		utils.ErrorAndExit("Error: No EOB origin asset directory specified")
 	}
 
-	assetDir := os.Args[1]
-	game := NewGame(assetDir)
+	assetDir := flag.Args()[0]
+	game := NewGame(assetDir, *extraAssetDir)
 
 	ebiten.SetWindowSize(640, 480)
 	ebiten.SetWindowTitle("Eye Of The Gopher")
