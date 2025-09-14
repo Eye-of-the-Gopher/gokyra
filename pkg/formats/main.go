@@ -32,6 +32,9 @@ func LoadAssets(classicAssetDir string, extraAssetDirs ...string) *Assets {
 	for _, assetDir := range extraAssetDirs {
 		slog.Debug("Loading from ", "dir", assetDir)
 		ret.LoadExtraAssets(assetDir)
+		prefix := path.Base(assetDir)
+		AssetsLogger.Debug("Loading extra assets", "from", assetDir, "prefix", prefix)
+		ret.LoadExtraAssets(assetDir, prefix)
 	}
 
 	return ret

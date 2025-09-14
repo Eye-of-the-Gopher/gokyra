@@ -177,14 +177,25 @@ func (a *Assets) LoadPakFile(pakfile string, prefix string) error {
 	return nil
 }
 
-func (a *Assets) LoadExtraAssets(baseDir string) error {
+func (a *Assets) LoadExtraAssets(baseDir string, prefix string) error {
 	assets, err := os.ReadDir(baseDir)
 	if err != nil {
 		return fmt.Errorf("Couldn't side load extra assets: Couldn't read %s", baseDir)
 	}
 	for _, asset := range assets {
 		assetFile := path.Join(baseDir, asset.Name())
-		PakLogger.Debug("Sideloading", "file", assetFile)
+		AssetsLogger.Debug("Sideloading", "file", assetFile)
+		key := asset.Name()
+		if prefix != "" {
+			key = fmt.Sprintf("%s/%s", prefix, key)
+		}
+		data, err := os.ReadFile(assetFile)
+		if err != nil {
+			AssetsLogger.Warn("Could not load", "file", assetFile)
+			return err
+		}
+		key = strings.ToUpper(key)
+		a.assets[key] = data
 	}
 	return nil
 }
