@@ -3,84 +3,12 @@ package formats
 import (
 	"encoding/binary"
 	"fmt"
-	"image"
-	"image/color"
 	"io"
 	"os"
 	"path"
 	"path/filepath"
 	"strings"
 )
-
-type Sprite struct {
-	Image image.Image
-	name  string
-}
-
-type Asset struct {
-	data []byte
-}
-
-func NewAsset(fname string, data []byte) Asset {
-	return Asset{
-		data: data,
-	}
-}
-
-type Assets struct {
-	assets map[string][]byte
-}
-
-func NewAssets() *Assets {
-	return &Assets{
-		assets: make(map[string][]byte),
-	}
-}
-
-func (a *Assets) GetPalette(name string) (color.Palette, error) {
-	ext := strings.ToLower(path.Ext(name))
-	PakLogger.Debug("Loading palette", "name", name, "extension", ext)
-	if ext != ".pal" && ext != ".col" {
-		return nil, fmt.Errorf("Cannot fetch %s as a sprite. Only PAL and COL", name)
-	} else {
-		data, exists := a.assets[name]
-		if exists {
-			pal := DecodePalette(data)
-			return pal, nil
-		} else {
-			return nil, fmt.Errorf("Cannot fetch %s: No such asset", name)
-		}
-	}
-}
-
-func (a *Assets) GetSprite(name string, palette color.Palette, width int, height int, prefix string) (*Sprite, error) {
-	ext := strings.ToLower(path.Ext(name))
-	PakLogger.Debug("Loading sprite", "name", name, "extension", ext)
-	if ext != ".cmp" && ext != ".cps" {
-		return nil, fmt.Errorf("Cannot fetch %s as a sprite. Only CPS and CMP", name)
-	} else {
-		data, exists := a.assets[name]
-		if exists {
-			imgData := DecodeCmp(name, data, palette)
-			img := CMPToImage(imgData, palette, width, height, 4)
-			PakLogger.Debug("Sending back", "len", len(data))
-			return &Sprite{
-				name:  name,
-				Image: img,
-			}, nil
-		} else {
-			return nil, fmt.Errorf("Cannot fetch %s: No such asset", name)
-		}
-
-	}
-
-}
-
-func (a *Assets) DumpAssets() {
-	for k := range a.assets {
-		fmt.Println(k)
-	}
-}
 
 func (a *Assets) LoadPakFile(pakfile string, prefix string) error {
 	filenames := []string{}

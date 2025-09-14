@@ -14,7 +14,14 @@ import (
 )
 
 func main() {
-	formats.InitLogger(slog.LevelError, slog.LevelError, slog.LevelError, slog.LevelError)
+	formats.InitLogger(formats.AssetLoaderConfig{
+		AssetLevel: slog.LevelDebug,
+		CmpLevel:   slog.LevelError,
+		MazLevel:   slog.LevelError,
+		PakLevel:   slog.LevelDebug,
+		PalLevel:   slog.LevelError,
+	})
+
 	engine.InitLogger(slog.LevelDebug)
 
 	flag.Usage = func() {

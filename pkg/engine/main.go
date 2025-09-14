@@ -40,6 +40,7 @@ func NewGame(assetDir string, extraAssetDir string) Game {
 		fmt.Println(t)
 	}
 	audioContext, err := audio.NewContext(44100)
+	//assets.DumpAssets()
 	if err != nil {
 		return Game{
 			assets:       *assets,
