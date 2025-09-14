@@ -15,6 +15,7 @@ import (
 
 func main() {
 	formats.InitLogger(slog.LevelError, slog.LevelError, slog.LevelError, slog.LevelError)
+	engine.InitLogger(slog.LevelDebug)
 
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Usage : %s [options] assetDirectory ...\n", os.Args[0])
@@ -33,7 +34,7 @@ func main() {
 	assetDir := flag.Args()[0]
 	game := engine.NewGame(assetDir, *extraAssetDir)
 
-	ebiten.SetWindowSize(640, 480)
+	ebiten.SetWindowSize(engine.ScreenWidth, engine.ScreenHeight)
 	ebiten.SetWindowTitle("Eye Of The Gopher")
 	if err := ebiten.RunGame(&game); err != nil {
 		log.Fatal(err)

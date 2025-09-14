@@ -8,6 +8,7 @@ import (
 	"image/color"
 
 	"github.com/nibrahim/eye-of-the-gopher/internal/utils"
+	"golang.org/x/image/draw"
 )
 
 type CMPHeader struct {
@@ -182,20 +183,31 @@ func parseCmpBody(header CMPHeader, input []byte, palette color.Palette) ([]byte
 }
 
 // Converts a CMP data stream in data to an image.Image
-func CMPToImage(data []byte, palette color.Palette, width int, height int) image.Image {
+func CMPToImage(data []byte, palette color.Palette, origWidth int, origHeight int, scale float64) image.Image {
 	CmpLogger.Debug("Converting CMP PNG", "length", len(data))
-	img := image.NewRGBA(image.Rect(0, 0, width, height))
+	img := image.NewRGBA(image.Rect(0, 0, origWidth, origHeight))
 
 	// Fill the image with the raw data
-	for y := range height {
-		for x := range width {
-			index := y*width + x
+	for y := range origHeight {
+		for x := range origWidth {
+			index := y*origWidth + x
 			if index < len(data) {
 				img.Set(x, y, palette[data[index]])
 			}
 		}
 	}
+
+	if scale != 0 {
+		img = ResizeImage(img, origWidth*int(scale), origHeight*int(scale))
+	}
+
 	return img
+}
+
+func ResizeImage(src image.Image, newWidth, newHeight int) *image.RGBA {
+	dst := image.NewRGBA(image.Rect(0, 0, newWidth, newHeight))
+	draw.CatmullRom.Scale(dst, dst.Bounds(), src, src.Bounds(), draw.Over, nil)
+	return dst
 }
 
 func DecodeCmp(filename string, fileContents []byte, palette color.Palette) []byte {

@@ -2,7 +2,6 @@ package engine
 
 import (
 	"fmt"
-	"log"
 	"log/slog"
 
 	"github.com/hajimehoshi/ebiten/audio"
@@ -17,8 +16,8 @@ var (
 )
 
 const (
-	screenWidth  = 640
-	screenHeight = 480
+	ScreenWidth  = 320 * 4
+	ScreenHeight = 200 * 4
 )
 
 type Game struct {
@@ -29,6 +28,7 @@ type Game struct {
 }
 
 func NewGame(assetDir string, extraAssetDir string) Game {
+	EngineLogger.Debug("Creating game")
 	assets := formats.LoadAssets(assetDir, extraAssetDir)
 	eg := "TITLE-V.CMP"
 	pal := "WESTWOOD.COL"
@@ -67,15 +67,10 @@ func (g *Game) Draw(screen *ebiten.Image) {
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
-	return screenWidth, screenHeight
+	return ScreenWidth, ScreenHeight
 }
 
-func main() {
-	fmt.Println("Starting Eye of the Gopher...")
-	ebiten.SetWindowSize(screenWidth, screenHeight)
-	ebiten.SetWindowTitle("Eye of the Gopher")
+func InitLogger(engineLevel slog.Level) {
+	EngineLogger = utils.InitLogger("engine", engineLevel)
 
-	if err := ebiten.RunGame(&Game{}); err != nil {
-		log.Fatal(err)
-	}
 }

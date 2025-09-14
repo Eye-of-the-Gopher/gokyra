@@ -62,7 +62,7 @@ func (a *Assets) GetSprite(name string, palette color.Palette, width int, height
 		data, exists := a.assets[name]
 		if exists {
 			imgData := DecodeCmp(name, data, palette)
-			img := CMPToImage(imgData, palette, width, height)
+			img := CMPToImage(imgData, palette, width, height, 4)
 			PakLogger.Debug("Sending back", "len", len(data))
 			return &Sprite{
 				name:  name,
