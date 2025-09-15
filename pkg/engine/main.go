@@ -1,8 +1,8 @@
 package engine
 
 import (
-	"fmt"
 	"log/slog"
+	"time"
 
 	"github.com/hajimehoshi/ebiten/audio"
 	"github.com/hajimehoshi/ebiten/v2"
@@ -20,38 +20,61 @@ const (
 	ScreenHeight = 200 * 4
 )
 
+type GameState int
+
+const (
+	GameIntro GameState = iota
+	GamePlaying
+	GamePaused
+)
+
 type Game struct {
+	introManager *IntroManager
+	state        GameState
+
 	assets        formats.Assets
-	image         *ebiten.Image
-	audioContext  *audio.Context // ONE for entire game
-	currentPlayer *audio.Player  // Changes per track
+	audioContext  *audio.Context
+	currentPlayer *audio.Player
 }
 
 func NewGame(assetDir string, extraAssetDir string) Game {
 	EngineLogger.Debug("Creating game")
 	assets := formats.LoadAssets(assetDir, extraAssetDir)
+	// eg := "TITLE-V.CMP"
+	// pal := "WESTWOOD.COL"
+	// p, err := assets.GetPalette(pal)
+	// t, err := assets.GetSprite(eg, p, 320, 200, "")
+	// if err != nil {
+	// 	utils.ErrorAndExit("Couldn't load File %s: %v", eg, err)
+	// } else {
+	// 	fmt.Println(t)
+	// }
+	audioContext, err := audio.NewContext(44100)
+	//assets.DumpAssets()
 	eg := "TITLE-V.CMP"
 	pal := "WESTWOOD.COL"
 	p, err := assets.GetPalette(pal)
 	t, err := assets.GetSprite(eg, p, 320, 200, "")
-	if err != nil {
-		utils.ErrorAndExit("Couldn't load File %s: %v", eg, err)
-	} else {
-		fmt.Println(t)
+	scene1 := ImageStage{
+		name:     "Title-v",
+		image:    t,
+		duration: time.Duration(1000),
 	}
-	audioContext, err := audio.NewContext(44100)
-	//assets.DumpAssets()
+
+	introManager := NewIntroManager([]ImageStage{scene1})
 	if err != nil {
 		return Game{
+			introManager: introManager,
+			state:        GameIntro,
 			assets:       *assets,
-			image:        ebiten.NewImageFromImage(t.Image),
 			audioContext: audioContext,
 		}
 
 	} else {
 		return Game{
+			introManager: introManager,
+			state:        GameIntro,
 			assets:       *assets,
-			image:        ebiten.NewImageFromImage(t.Image),
 			audioContext: nil,
 		}
 
@@ -59,11 +82,21 @@ func NewGame(assetDir string, extraAssetDir string) Game {
 }
 
 func (g *Game) Update() error {
+	switch g.state {
+	case GameIntro:
+		g.introManager.Update()
+
+	}
 	return nil
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
-	screen.DrawImage(g.image, nil)
+	switch g.state {
+	case GameIntro:
+		g.introManager.Draw(screen)
+
+	}
+	// screen.DrawImage(g.image, nil)
 	ebitenutil.DebugPrint(screen, "Eye of the Gopher\nHello, Dungeon!")
 }
 

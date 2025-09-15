@@ -8,6 +8,7 @@ import (
 	"path"
 	"strings"
 
+	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/nibrahim/eye-of-the-gopher/internal/utils"
 )
 
@@ -40,6 +41,11 @@ func NewAssets() *Assets {
 type Sprite struct {
 	Image image.Image
 	name  string
+}
+
+func (s *Sprite) GetEbitenImage() (*ebiten.Image, error) {
+	ret := ebiten.NewImageFromImage(s.Image)
+	return ret, nil
 }
 
 func (a *Assets) GetPalette(name string) (color.Palette, error) {
