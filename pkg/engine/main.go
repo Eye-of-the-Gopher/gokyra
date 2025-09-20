@@ -36,7 +36,7 @@ type Game struct {
 	currentPlayer *audio.Player
 }
 
-func NewGame(assetDir string, extraAssetDir string) Game {
+func NewGame(assetDir string, extraAssetDir string, enhanced bool) Game {
 	EngineLogger.Debug("Creating game")
 	assets := formats.LoadAssets(assetDir, extraAssetDir)
 	audioContext, err := audio.NewContext(44100)
@@ -48,13 +48,27 @@ func NewGame(assetDir string, extraAssetDir string) Game {
 		duration1, duration2 int
 	}
 
-	configs := []SceneConfig{
-		{"westwood", "ENHANCED/WESTWOOD.PNG", "WESTWOOD.COL", 4, 3},
-		{"westwood And", "AND.CMP", "WESTWOOD.COL", 3, 2},
-		{"ssi", "SSI.CMP", "WESTWOOD.COL", 4, 3},
-		{"present", "PRESENT.CMP", "WESTWOOD.COL", 3, 2},
-		{"dand", "DAND.CMP", "WESTWOOD.COL", 3, 2},
-		{"dand", "ENHANCED/WESTWOOD.PNG", "WESTWOOD.COL", 3, 2},
+	var configs []SceneConfig
+
+	if enhanced {
+		EngineLogger.Debug("Using enhanced assets")
+		configs = []SceneConfig{
+			{"westwood", "ENHANCED/WESTWOOD.PNG", "WESTWOOD.COL", 4, 3},
+			{"westwood And", "ENHANCED/AND.PNG", "WESTWOOD.COL", 3, 2},
+			{"ssi", "ENHANCED/SSI.PNG", "WESTWOOD.COL", 4, 3},
+			{"present", "ENHANCED/PRESENT.PNG", "WESTWOOD.COL", 3, 2},
+			{"dand", "ENHANCED/DAND.PNG", "WESTWOOD.COL", 3, 2},
+			{"dand", "ENHANCED/WESTWOOD.PNG", "WESTWOOD.COL", 3, 2},
+		}
+	} else {
+		EngineLogger.Debug("Using classic assets")
+		configs = []SceneConfig{
+			{"westwood", "WESTWOOD.CMP", "WESTWOOD.COL", 4, 3},
+			{"westwood And", "AND.CMP", "WESTWOOD.COL", 3, 2},
+			{"ssi", "SSI.CMP", "WESTWOOD.COL", 4, 3},
+			{"present", "PRESENT.CMP", "WESTWOOD.COL", 3, 2},
+			{"dand", "DAND.CMP", "WESTWOOD.COL", 3, 2},
+		}
 	}
 	var scenes []ImageStage
 	for _, c := range configs {
