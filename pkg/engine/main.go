@@ -63,11 +63,13 @@ func NewGame(assetDir string, extraAssetDir string, enhanced bool) Game {
 	} else {
 		EngineLogger.Debug("Using classic assets")
 		configs = []SceneConfig{
-			{"westwood", "WESTWOOD.CMP", "WESTWOOD.COL", 4, 3},
+			{"westwood", "WESTWOOD.CMP", "WESTWOOD.COL", 8, 3},
 			{"westwood And", "AND.CMP", "WESTWOOD.COL", 3, 2},
-			{"ssi", "SSI.CMP", "WESTWOOD.COL", 4, 3},
-			{"present", "PRESENT.CMP", "WESTWOOD.COL", 3, 2},
-			{"dand", "DAND.CMP", "WESTWOOD.COL", 3, 2},
+			{"ssi", "SSI.CMP", "WESTWOOD.COL", 5, 3},
+			{"present", "PRESENT.CMP", "WESTWOOD.COL", 2, 1},
+			{"dand", "DAND.CMP", "WESTWOOD.COL", 8, 2},
+			{"intro", "INTRO.CPS", "EOBPAL.COL", 8, 2},
+			{"intro", "INTRO.CPS", "EOBPAL.COL", 5, 2},
 		}
 	}
 	var scenes []ImageStage
