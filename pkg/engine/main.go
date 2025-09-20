@@ -2,7 +2,6 @@ package engine
 
 import (
 	"log/slog"
-	"time"
 
 	"github.com/hajimehoshi/ebiten/audio"
 	"github.com/hajimehoshi/ebiten/v2"
@@ -40,28 +39,34 @@ type Game struct {
 func NewGame(assetDir string, extraAssetDir string) Game {
 	EngineLogger.Debug("Creating game")
 	assets := formats.LoadAssets(assetDir, extraAssetDir)
-	// eg := "TITLE-V.CMP"
-	// pal := "WESTWOOD.COL"
-	// p, err := assets.GetPalette(pal)
-	// t, err := assets.GetSprite(eg, p, 320, 200, "")
-	// if err != nil {
-	// 	utils.ErrorAndExit("Couldn't load File %s: %v", eg, err)
-	// } else {
-	// 	fmt.Println(t)
-	// }
 	audioContext, err := audio.NewContext(44100)
-	//assets.DumpAssets()
-	eg := "TITLE-V.CMP"
-	pal := "WESTWOOD.COL"
-	p, err := assets.GetPalette(pal)
-	t, err := assets.GetSprite(eg, p, 320, 200, "")
-	scene1 := ImageStage{
-		name:     "Title-v",
-		image:    t,
-		duration: time.Duration(1000),
+
+	assets.DumpAssets()
+
+	type SceneConfig struct {
+		name, asset, palette string
+		duration1, duration2 int
 	}
 
-	introManager := NewIntroManager([]ImageStage{scene1})
+	configs := []SceneConfig{
+		{"westwood", "ENHANCED/WESTWOOD.PNG", "WESTWOOD.COL", 4, 3},
+		{"westwood And", "AND.CMP", "WESTWOOD.COL", 3, 2},
+		{"ssi", "SSI.CMP", "WESTWOOD.COL", 4, 3},
+		{"present", "PRESENT.CMP", "WESTWOOD.COL", 3, 2},
+		{"dand", "DAND.CMP", "WESTWOOD.COL", 3, 2},
+		{"dand", "ENHANCED/WESTWOOD.PNG", "WESTWOOD.COL", 3, 2},
+	}
+	var scenes []ImageStage
+	for _, c := range configs {
+		scene, err := NewImageStage(assets, c.name, c.asset, c.palette, c.duration1, c.duration2)
+		if err != nil {
+			EngineLogger.Error("Couldn't load asset ", "asset", c.asset, "error", err)
+			panic("Asset loading failed")
+		}
+		scenes = append(scenes, *scene)
+	}
+
+	introManager := NewIntroManager(scenes)
 	if err != nil {
 		return Game{
 			introManager: introManager,

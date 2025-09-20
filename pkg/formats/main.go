@@ -1,6 +1,7 @@
 package formats
 
 import (
+	"bytes"
 	"fmt"
 	"image"
 	"image/color"
@@ -9,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/nfnt/resize"
 	"github.com/nibrahim/eye-of-the-gopher/internal/utils"
 )
 
@@ -64,16 +66,15 @@ func (a *Assets) GetPalette(name string) (color.Palette, error) {
 	}
 }
 
-func (a *Assets) GetSprite(name string, palette color.Palette, width int, height int, prefix string) (*Sprite, error) {
+func (a *Assets) GetSprite(name string, palette color.Palette, width uint, height uint, prefix string) (*Sprite, error) {
 	ext := strings.ToLower(path.Ext(name))
 	PakLogger.Debug("Loading sprite", "name", name, "extension", ext)
-	if ext != ".cmp" && ext != ".cps" {
-		return nil, fmt.Errorf("Cannot fetch %s as a sprite. Only CPS and CMP", name)
-	} else {
+	switch ext {
+	case ".cmp", ".cps":
 		data, exists := a.assets[name]
 		if exists {
 			imgData := DecodeCmp(name, data, palette)
-			img := CMPToImage(imgData, palette, width, height, 4)
+			img := CMPToImage(imgData, palette, int(width), int(height), 4)
 			PakLogger.Debug("Sending back", "len", len(data))
 			return &Sprite{
 				name:  name,
@@ -82,7 +83,27 @@ func (a *Assets) GetSprite(name string, palette color.Palette, width int, height
 		} else {
 			return nil, fmt.Errorf("Cannot fetch %s: No such asset", name)
 		}
-
+	case ".png":
+		data, exists := a.assets[name]
+		if exists {
+			imgData := bytes.NewReader(data)
+			img, format, err := image.Decode(imgData)
+			img = resize.Resize(width*4, height*4, img, resize.Lanczos3)
+			PakLogger.Debug("Decoding image ", "name", name, "format", format)
+			if err != nil {
+				PakLogger.Error("Couldn't decode image", "image", name)
+				return nil, fmt.Errorf("Couldn't decoder image %s", name)
+			}
+			PakLogger.Debug("Sending back", "len", len(data))
+			return &Sprite{
+				name:  name,
+				Image: img,
+			}, nil
+		} else {
+			return nil, fmt.Errorf("Cannot fetch %s: No such asset", name)
+		}
+	default:
+		return nil, fmt.Errorf("Cannot fetch %s as a sprite. Only CPS, CMP or PNG", name)
 	}
 
 }
