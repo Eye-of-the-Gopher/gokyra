@@ -3,8 +3,8 @@ package engine
 import (
 	"log/slog"
 
-	"github.com/hajimehoshi/ebiten/audio"
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/audio"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/nibrahim/eye-of-the-gopher/internal/utils"
 	"github.com/nibrahim/eye-of-the-gopher/pkg/formats"
@@ -31,21 +31,21 @@ type Game struct {
 	introManager *IntroManager
 	state        GameState
 
-	assets        formats.Assets
-	audioContext  *audio.Context
-	currentPlayer *audio.Player
+	assets       formats.Assets
+	audioContext *audio.Context
+	currentTrack *audio.Player
 }
 
 func NewGame(assetDir string, extraAssetDir string, enhanced bool) Game {
 	EngineLogger.Debug("Creating game")
 	assets := formats.LoadAssets(assetDir, extraAssetDir)
-	audioContext, err := audio.NewContext(44100)
+	audioContext := audio.NewContext(44100)
 
 	assets.DumpAssets()
 
 	type SceneConfig struct {
-		name, asset, palette string
-		duration1, duration2 int
+		name, asset, palette, trackname string
+		duration1, duration2            int
 	}
 
 	var configs []SceneConfig
@@ -53,28 +53,28 @@ func NewGame(assetDir string, extraAssetDir string, enhanced bool) Game {
 	if enhanced {
 		EngineLogger.Debug("Using enhanced assets")
 		configs = []SceneConfig{
-			{"westwood", "ENHANCED/WESTWOOD.PNG", "WESTWOOD.COL", 4, 3},
-			{"westwood And", "ENHANCED/AND.PNG", "WESTWOOD.COL", 3, 2},
-			{"ssi", "ENHANCED/SSI.PNG", "WESTWOOD.COL", 4, 3},
-			{"present", "ENHANCED/PRESENT.PNG", "WESTWOOD.COL", 3, 2},
-			{"dand", "ENHANCED/DAND.PNG", "WESTWOOD.COL", 3, 2},
-			{"dand", "ENHANCED/WESTWOOD.PNG", "WESTWOOD.COL", 3, 2},
+			{"westwood", "ENHANCED/WESTWOOD.PNG", "WESTWOOD.COL", "", 4, 3},
+			{"westwood And", "ENHANCED/AND.PNG", "WESTWOOD.COL", "", 3, 2},
+			{"ssi", "ENHANCED/SSI.PNG", "WESTWOOD.COL", "", 4, 3},
+			{"present", "ENHANCED/PRESENT.PNG", "WESTWOOD.COL", "", 3, 2},
+			{"dand", "ENHANCED/DAND.PNG", "WESTWOOD.COL", "", 3, 2},
+			{"dand", "ENHANCED/WESTWOOD.PNG", "WESTWOOD.COL", "", 3, 2},
 		}
 	} else {
 		EngineLogger.Debug("Using classic assets")
 		configs = []SceneConfig{
-			{"westwood", "WESTWOOD.CMP", "WESTWOOD.COL", 8, 3},
-			{"westwood And", "AND.CMP", "WESTWOOD.COL", 3, 2},
-			{"ssi", "SSI.CMP", "WESTWOOD.COL", 5, 3},
-			{"present", "PRESENT.CMP", "WESTWOOD.COL", 2, 1},
-			{"dand", "DAND.CMP", "WESTWOOD.COL", 8, 2},
-			{"intro", "INTRO.CPS", "EOBPAL.COL", 8, 2},
-			{"intro", "INTRO.CPS", "EOBPAL.COL", 5, 2},
+			{"westwood", "WESTWOOD.CMP", "WESTWOOD.COL", "ENHANCED/INTRO.WAV", 8, 3},
+			{"westwood And", "AND.CMP", "WESTWOOD.COL", "", 3, 2},
+			{"ssi", "SSI.CMP", "WESTWOOD.COL", "", 5, 3},
+			{"present", "PRESENT.CMP", "WESTWOOD.COL", "", 2, 1},
+			{"dand", "DAND.CMP", "WESTWOOD.COL", "", 8, 2},
+			{"intro", "INTRO.CPS", "EOBPAL.COL", "", 8, 2},
+			{"intro", "INTRO.CPS", "EOBPAL.COL", "", 5, 2},
 		}
 	}
 	var scenes []ImageStage
 	for _, c := range configs {
-		scene, err := NewImageStage(assets, c.name, c.asset, c.palette, c.duration1, c.duration2)
+		scene, err := NewImageStage(assets, c.name, c.asset, c.palette, c.trackname, c.duration1, c.duration2)
 		if err != nil {
 			EngineLogger.Error("Couldn't load asset ", "asset", c.asset, "error", err)
 			panic("Asset loading failed")
@@ -83,23 +83,13 @@ func NewGame(assetDir string, extraAssetDir string, enhanced bool) Game {
 	}
 
 	introManager := NewIntroManager(scenes)
-	if err != nil {
-		return Game{
-			introManager: introManager,
-			state:        GameIntro,
-			assets:       *assets,
-			audioContext: audioContext,
-		}
-
-	} else {
-		return Game{
-			introManager: introManager,
-			state:        GameIntro,
-			assets:       *assets,
-			audioContext: nil,
-		}
-
+	return Game{
+		introManager: introManager,
+		state:        GameIntro,
+		assets:       *assets,
+		audioContext: audioContext,
 	}
+
 }
 
 func (g *Game) Update() error {
@@ -114,7 +104,7 @@ func (g *Game) Update() error {
 func (g *Game) Draw(screen *ebiten.Image) {
 	switch g.state {
 	case GameIntro:
-		g.introManager.Draw(screen)
+		g.introManager.Draw(screen, g.audioContext)
 
 	}
 	// screen.DrawImage(g.image, nil)

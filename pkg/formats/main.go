@@ -5,11 +5,15 @@ import (
 	"fmt"
 	"image"
 	"image/color"
+	"io"
 	"log/slog"
 	"path"
 	"strings"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/audio"
+	"github.com/hajimehoshi/ebiten/v2/audio/mp3"
+	"github.com/hajimehoshi/ebiten/v2/audio/wav"
 	"github.com/nfnt/resize"
 	"github.com/nibrahim/eye-of-the-gopher/internal/utils"
 )
@@ -48,6 +52,73 @@ type Sprite struct {
 func (s *Sprite) GetEbitenImage() (*ebiten.Image, error) {
 	ret := ebiten.NewImageFromImage(s.Image)
 	return ret, nil
+}
+
+type AudioTrack struct {
+	track  string
+	data   []byte
+	format string
+}
+
+func (a *AudioTrack) GetEbintenPlayer(ctx *audio.Context) (*audio.Player, error) {
+	var stream io.ReadSeeker
+	var err error
+
+	reader := bytes.NewReader(a.data)
+	switch a.format {
+	case "mp3":
+		stream, err = mp3.DecodeWithSampleRate(ctx.SampleRate(), reader)
+	case "adl":
+		AssetsLogger.Info("ADL currently unsupported")
+		stream = nil
+		err = fmt.Errorf("ADL currently unsupported. Please convert separately and side load")
+	case "wav":
+		stream, err = wav.DecodeWithSampleRate(ctx.SampleRate(), reader)
+	default:
+		AssetsLogger.Error("Unknown format", "format", a.format)
+		stream = nil
+		err = fmt.Errorf("Unknown format %s", a.format)
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	ret, err := ctx.NewPlayer(stream)
+	if err != nil {
+		return nil, fmt.Errorf("Couldn't create player: %v", err)
+	}
+	return ret, err
+
+}
+
+func (a *Assets) GetAudioTrack(name string) (*AudioTrack, error) {
+	ext := strings.ToLower(path.Ext(name))
+	AssetsLogger.Debug("Loading track", "name", name, "extension", ext)
+	data, exists := a.assets[name]
+	if exists {
+		switch ext {
+		case ".adl":
+			AssetsLogger.Info("ADL currently unsupported")
+			return nil, nil
+		case ".mp3":
+			return &AudioTrack{
+				track:  name,
+				data:   data,
+				format: "mp3",
+			}, nil
+		case ".wav":
+			return &AudioTrack{
+				track:  name,
+				data:   data,
+				format: "wav",
+			}, nil
+		default:
+			return nil, fmt.Errorf("Cannot fetch %s as an Audio track. Only ADL or mp3", name)
+		}
+	} else {
+
+		return nil, fmt.Errorf("Cannot fetch %s: No such asset", name)
+	}
 }
 
 func (a *Assets) GetPalette(name string) (color.Palette, error) {

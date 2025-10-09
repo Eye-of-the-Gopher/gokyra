@@ -4,34 +4,46 @@ import (
 	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/audio"
 	"github.com/nibrahim/eye-of-the-gopher/pkg/formats"
 )
 
 type ImageStage struct { // This will later become an interface
-	startedAt   time.Time
-	running     bool
-	name        string
-	image       *formats.Sprite
-	fadeStart   time.Duration
-	displayTime time.Duration
+	startedAt    time.Time
+	running      bool
+	name         string
+	image        *formats.Sprite
+	fadeStart    time.Duration
+	displayTime  time.Duration
+	track        *formats.AudioTrack
+	trackStarted bool
 }
 
-func NewImageStage(assets *formats.Assets, name string, assetName string, paletteName string, displayDuration int, fadeDuration int) (*ImageStage, error) {
+func NewImageStage(assets *formats.Assets, name string, assetName string, paletteName string, trackName string, displayDuration int, fadeDuration int) (*ImageStage, error) {
 	p, err := assets.GetPalette(paletteName)
 	if err != nil {
 		return nil, err
 	}
 
-	t, err := assets.GetSprite(assetName, p, 320, 200, "")
+	image, err := assets.GetSprite(assetName, p, 320, 200, "")
 	if err != nil {
 		return nil, err
 	}
+	var track *formats.AudioTrack
+	if trackName != "" {
+		track, err = assets.GetAudioTrack(trackName)
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	ret := ImageStage{
-		name:        name,
-		image:       t,
-		displayTime: time.Duration(displayDuration) * time.Second,
-		fadeStart:   time.Duration(fadeDuration) * time.Second,
+		name:         name,
+		image:        image,
+		displayTime:  time.Duration(displayDuration) * time.Second,
+		fadeStart:    time.Duration(fadeDuration) * time.Second,
+		trackStarted: false,
+		track:        track,
 	}
 	return &ret, nil
 }
@@ -73,11 +85,18 @@ func (i *IntroManager) Update() error {
 	return nil
 }
 
-func (i *IntroManager) Draw(screen *ebiten.Image) {
+func (i *IntroManager) Draw(screen *ebiten.Image, context *audio.Context) {
 	// EngineLogger.Debug("Game is Drawing Intro")
 	stage := i.stages[i.stageIndex]
 	img, _ := stage.image.GetEbitenImage()
 	screen.DrawImage(img, nil)
+	if stage.track != nil && !stage.trackStarted {
+		audioPlayer, err := stage.track.GetEbintenPlayer(context)
+		if err == nil {
+			audioPlayer.Play()
+		}
+
+	}
 	if i.fading {
 		nStage := i.stages[i.stageIndex+1]
 		nImg, _ := nStage.image.GetEbitenImage()
