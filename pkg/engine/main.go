@@ -95,7 +95,7 @@ func NewGame(assetDir string, extraAssetDir string, enhanced bool) Game {
 func (g *Game) Update() error {
 	switch g.state {
 	case GameIntro:
-		g.introManager.Update()
+		g.introManager.Update(g)
 
 	}
 	return nil
@@ -104,7 +104,7 @@ func (g *Game) Update() error {
 func (g *Game) Draw(screen *ebiten.Image) {
 	switch g.state {
 	case GameIntro:
-		g.introManager.Draw(screen, g.audioContext)
+		g.introManager.Draw(screen, g)
 
 	}
 	// screen.DrawImage(g.image, nil)

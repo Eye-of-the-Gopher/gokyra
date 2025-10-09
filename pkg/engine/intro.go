@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hajimehoshi/ebiten/v2/audio"
 	"github.com/nibrahim/eye-of-the-gopher/pkg/formats"
 )
 
@@ -62,7 +61,7 @@ type IntroManager struct {
 	fadingCounter float32
 }
 
-func (i *IntroManager) Update() error {
+func (i *IntroManager) Update(game *Game) error {
 	// EngineLogger.Debug("Game is playing Intro")
 	stage := &i.stages[i.stageIndex]
 	// EngineLogger.Debug("Time now", "startedAt", stage.startedAt, "time since", time.Since(stage.startedAt), "duration", stage.displayTime, "running", stage.running)
@@ -70,6 +69,30 @@ func (i *IntroManager) Update() error {
 		stage.running = true
 		stage.startedAt = time.Now()
 		EngineLogger.Debug("Starting stage", "name", stage.name, "at", stage.startedAt)
+		if stage.track != nil { // Stage has a track
+			if game.currentTrack == nil { // But nothing is playing
+				audioPlayer, err := stage.track.GetEbintenPlayer(game.audioContext) // Get ready to play
+				if err == nil {
+					game.currentTrack = audioPlayer
+				}
+			} else if game.currentTrack.IsPlaying() { // There's something already playing
+				err := game.currentTrack.Close() // Stop it
+				if err != nil {
+					EngineLogger.Warn("Couldn't stop current track ", "reason", err)
+				}
+				audioPlayer, err := stage.track.GetEbintenPlayer(game.audioContext) // and create a new player
+				if err == nil {
+					game.currentTrack = audioPlayer
+				}
+			}
+		} else { // The stage doesn't have a track
+			if game.currentTrack != nil { // If there's something playing
+				err := game.currentTrack.Close() // Stop it
+				if err != nil {
+					EngineLogger.Warn("Couldn't stop current track ", "reason", err)
+				}
+			}
+		}
 	} else {
 		if time.Since(stage.startedAt) > stage.fadeStart {
 			EngineLogger.Debug("Starting fade", "name", stage.name, "at", stage.fadeStart)
@@ -85,17 +108,13 @@ func (i *IntroManager) Update() error {
 	return nil
 }
 
-func (i *IntroManager) Draw(screen *ebiten.Image, context *audio.Context) {
+func (i *IntroManager) Draw(screen *ebiten.Image, game *Game) {
 	// EngineLogger.Debug("Game is Drawing Intro")
 	stage := i.stages[i.stageIndex]
 	img, _ := stage.image.GetEbitenImage()
 	screen.DrawImage(img, nil)
-	if stage.track != nil && !stage.trackStarted {
-		audioPlayer, err := stage.track.GetEbintenPlayer(context)
-		if err == nil {
-			audioPlayer.Play()
-		}
-
+	if game.currentTrack != nil && !game.currentTrack.IsPlaying() {
+		game.currentTrack.Play()
 	}
 	if i.fading {
 		nStage := i.stages[i.stageIndex+1]
