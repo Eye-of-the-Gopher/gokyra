@@ -12,7 +12,13 @@ import (
 )
 
 func main() {
-	formats.InitLogger(slog.LevelDebug, slog.LevelError, slog.LevelError, slog.LevelDebug)
+	formats.InitLogger(formats.AssetLoaderConfig{
+		AssetLevel: slog.LevelDebug,
+		CmpLevel:   slog.LevelError,
+		MazLevel:   slog.LevelError,
+		PakLevel:   slog.LevelDebug,
+		PalLevel:   slog.LevelError,
+	})
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Usage : %s [options] imageFile1 imageFile2 ...\n", os.Args[0])
 		fmt.Fprintf(os.Stderr, "\nOptions:\n")
@@ -52,7 +58,7 @@ func main() {
 		}
 		decompressedData := formats.DecodeCmp(imageFile, CMPData, palette)
 
-		img := formats.CMPToImage(decompressedData, palette, 320, 200)
+		img := formats.CMPToImage(decompressedData, palette, 320, 200, 1)
 
 		file, err := os.Create(outputFile)
 		if err != nil {

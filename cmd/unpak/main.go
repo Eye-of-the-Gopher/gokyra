@@ -10,7 +10,14 @@ import (
 )
 
 func main() {
-	formats.InitLogger(slog.LevelError, slog.LevelError, slog.LevelDebug, slog.LevelError)
+	formats.InitLogger(formats.AssetLoaderConfig{
+		AssetLevel: slog.LevelDebug,
+		CmpLevel:   slog.LevelError,
+		MazLevel:   slog.LevelError,
+		PakLevel:   slog.LevelDebug,
+		PalLevel:   slog.LevelError,
+	})
+
 	if len(os.Args) != 3 {
 		utils.ErrorAndExit("Usage: unpak pakfile outputDirectory")
 	}
