@@ -1,7 +1,6 @@
 package engine
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -127,7 +126,6 @@ func (i *IntroManager) Draw(screen *ebiten.Image, game *Game) {
 		nStage := i.stages[i.stageIndex+1]
 		nImg, _ := nStage.image.GetEbitenImage()
 		op := &ebiten.DrawImageOptions{}
-		fmt.Println(i.fadeAlpha)
 		op.ColorScale.ScaleAlpha(float32(i.fadeAlpha)) // 0.0 to 1.0
 		screen.DrawImage(nImg, op)
 	}
