@@ -108,7 +108,7 @@ func (a *Assets) LoadPakFile(pakfile string, prefix string) error {
 func (a *Assets) LoadExtraAssets(baseDir string, prefix string) error {
 	assets, err := os.ReadDir(baseDir)
 	if err != nil {
-		return fmt.Errorf("Couldn't side load extra assets: Couldn't read %s", baseDir)
+		return fmt.Errorf("couldn't side load extra assets: Couldn't read %s", baseDir)
 	}
 	for _, asset := range assets {
 		assetFile := path.Join(baseDir, asset.Name())

@@ -19,11 +19,11 @@ type Room struct {
 }
 
 type Plan struct {
-	Cells     [1024]Room
-	size      int
-	cellwidth uint8
-	border    int
-	cellSize  int
+	Cells [1024]Room
+	size  int
+	// cellwidth uint8
+	border   int
+	cellSize int
 }
 
 func createInfoBox(dc *gg.Context, text string, date string) {
@@ -83,7 +83,7 @@ func drawRect(dc *gg.Context, x float64, y float64, w float64, h float64, hatch 
 	}
 
 	if border {
-		if fill == false {
+		if !fill {
 			dc.SetHexColor("#4A3F35") // Dark border
 			dc.SetLineWidth(1)
 			dc.DrawRectangle(x, y, w, h)

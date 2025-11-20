@@ -47,13 +47,6 @@ func NewImageStage(assets *formats.Assets, name string, assetName string, palett
 	return &ret, nil
 }
 
-func (g *Game) PlayScene(scenes []ImageStage) {
-	EngineLogger.Debug("Playing scene")
-	for _, i := range scenes {
-		EngineLogger.Debug(i.name)
-	}
-}
-
 type IntroManager struct {
 	stageIndex int
 	stages     []ImageStage
@@ -99,7 +92,7 @@ func (i *IntroManager) Update(game *Game) error {
 		// 	}
 		// }
 	} else {
-		if (time.Since(stage.startedAt) > stage.fadeStart) && i.fading == false {
+		if (time.Since(stage.startedAt) > stage.fadeStart) && !i.fading {
 			EngineLogger.Debug("Starting fade", "name", stage.name, "at", stage.fadeStart)
 			i.fading = true
 			i.fadeStart = time.Now()

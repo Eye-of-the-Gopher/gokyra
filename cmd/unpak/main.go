@@ -5,7 +5,6 @@ import (
 	"os"
 
 	"github.com/nibrahim/eye-of-the-gopher/internal/formats"
-	unpak "github.com/nibrahim/eye-of-the-gopher/internal/formats"
 	"github.com/nibrahim/eye-of-the-gopher/internal/utils"
 )
 
@@ -22,7 +21,7 @@ func main() {
 		utils.ErrorAndExit("Usage: unpak pakfile outputDirectory")
 	}
 
-	assets := unpak.NewAssets()
+	assets := formats.NewAssets()
 	err := assets.LoadPakFile(os.Args[1], "")
 	if err != nil {
 		utils.ErrorAndExit("Could not unpack file: %v", err)

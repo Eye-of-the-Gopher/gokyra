@@ -75,9 +75,9 @@ func (a *AudioTrack) GetEbintenPlayer(ctx *audio.Context) (*audio.Player, error)
 	case "wav":
 		stream, err = wav.DecodeWithSampleRate(ctx.SampleRate(), reader)
 	default:
-		AssetsLogger.Error("Unknown format", "format", a.format)
+		AssetsLogger.Error("unknown format", "format", a.format)
 		stream = nil
-		err = fmt.Errorf("Unknown format %s", a.format)
+		err = fmt.Errorf("unknown format %s", a.format)
 	}
 	if err != nil {
 		return nil, err
@@ -85,7 +85,7 @@ func (a *AudioTrack) GetEbintenPlayer(ctx *audio.Context) (*audio.Player, error)
 
 	ret, err := ctx.NewPlayer(stream)
 	if err != nil {
-		return nil, fmt.Errorf("Couldn't create player: %v", err)
+		return nil, fmt.Errorf("couldn't create player: %v", err)
 	}
 	return ret, err
 
@@ -113,11 +113,11 @@ func (a *Assets) GetAudioTrack(name string) (*AudioTrack, error) {
 				format: "wav",
 			}, nil
 		default:
-			return nil, fmt.Errorf("Cannot fetch %s as an Audio track. Only ADL or mp3", name)
+			return nil, fmt.Errorf("cannot fetch %s as an Audio track. Only ADL or mp3", name)
 		}
 	} else {
 
-		return nil, fmt.Errorf("Cannot fetch %s: No such asset", name)
+		return nil, fmt.Errorf("cannot fetch %s: No such asset", name)
 	}
 }
 
@@ -125,14 +125,14 @@ func (a *Assets) GetPalette(name string) (color.Palette, error) {
 	ext := strings.ToLower(path.Ext(name))
 	PakLogger.Debug("Loading palette", "name", name, "extension", ext)
 	if ext != ".pal" && ext != ".col" {
-		return nil, fmt.Errorf("Cannot fetch %s as a sprite. Only PAL and COL", name)
+		return nil, fmt.Errorf("cannot fetch %s as a sprite. Only PAL and COL", name)
 	} else {
 		data, exists := a.assets[name]
 		if exists {
 			pal := DecodePalette(data)
 			return pal, nil
 		} else {
-			return nil, fmt.Errorf("Cannot fetch %s: No such asset", name)
+			return nil, fmt.Errorf("cannot fetch %s: No such asset", name)
 		}
 	}
 }
@@ -152,7 +152,7 @@ func (a *Assets) GetSprite(name string, palette color.Palette, width uint, heigh
 				Image: img,
 			}, nil
 		} else {
-			return nil, fmt.Errorf("Cannot fetch %s: No such asset", name)
+			return nil, fmt.Errorf("cannot fetch %s: No such asset", name)
 		}
 	case ".png":
 		data, exists := a.assets[name]
@@ -162,8 +162,8 @@ func (a *Assets) GetSprite(name string, palette color.Palette, width uint, heigh
 			img = resize.Resize(width*4, height*4, img, resize.Lanczos3)
 			PakLogger.Debug("Decoding image ", "name", name, "format", format)
 			if err != nil {
-				PakLogger.Error("Couldn't decode image", "image", name)
-				return nil, fmt.Errorf("Couldn't decoder image %s", name)
+				PakLogger.Error("couldn't decode image", "image", name)
+				return nil, fmt.Errorf("couldn't decoder image %s", name)
 			}
 			PakLogger.Debug("Sending back", "len", len(data))
 			return &Sprite{
@@ -171,10 +171,10 @@ func (a *Assets) GetSprite(name string, palette color.Palette, width uint, heigh
 				Image: img,
 			}, nil
 		} else {
-			return nil, fmt.Errorf("Cannot fetch %s: No such asset", name)
+			return nil, fmt.Errorf("cannot fetch %s: No such asset", name)
 		}
 	default:
-		return nil, fmt.Errorf("Cannot fetch %s as a sprite. Only CPS, CMP or PNG", name)
+		return nil, fmt.Errorf("cannot fetch %s as a sprite. Only CPS, CMP or PNG", name)
 	}
 
 }
