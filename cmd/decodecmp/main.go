@@ -7,8 +7,8 @@ import (
 	"log/slog"
 	"os"
 
+	"github.com/nibrahim/eye-of-the-gopher/internal/formats"
 	"github.com/nibrahim/eye-of-the-gopher/internal/utils"
-	"github.com/nibrahim/eye-of-the-gopher/pkg/formats"
 )
 
 func main() {

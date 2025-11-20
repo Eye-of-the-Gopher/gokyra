@@ -8,9 +8,9 @@ import (
 	"os"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/nibrahim/eye-of-the-gopher/internal/engine"
+	"github.com/nibrahim/eye-of-the-gopher/internal/formats"
 	"github.com/nibrahim/eye-of-the-gopher/internal/utils"
-	"github.com/nibrahim/eye-of-the-gopher/pkg/engine"
-	"github.com/nibrahim/eye-of-the-gopher/pkg/formats"
 )
 
 func main() {

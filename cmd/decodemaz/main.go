@@ -4,12 +4,18 @@ import (
 	"log/slog"
 	"os"
 
+	"github.com/nibrahim/eye-of-the-gopher/internal/formats"
 	"github.com/nibrahim/eye-of-the-gopher/internal/utils"
-	"github.com/nibrahim/eye-of-the-gopher/pkg/formats"
 )
 
 func main() {
-	formats.InitLogger(slog.LevelError, slog.LevelError, slog.LevelError, slog.LevelError)
+	formats.InitLogger(formats.AssetLoaderConfig{
+		AssetLevel: slog.LevelDebug,
+		CmpLevel:   slog.LevelError,
+		MazLevel:   slog.LevelError,
+		PakLevel:   slog.LevelDebug,
+		PalLevel:   slog.LevelError,
+	})
 	if len(os.Args) != 3 {
 		utils.ErrorAndExit("Usage : ./decodemaz mazFile outputFile")
 	}

@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/nibrahim/eye-of-the-gopher/pkg/formats"
+	"github.com/nibrahim/eye-of-the-gopher/internal/formats"
 )
 
 type ImageStage struct { // This will later become an interface
