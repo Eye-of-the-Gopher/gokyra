@@ -55,8 +55,17 @@ type IntroManager struct {
 	fadeAlpha  float64
 }
 
-func (i *IntroManager) Update(game *Game) error {
+func (i *IntroManager) Update(game *Game) (bool, error) {
 	// EngineLogger.Debug("Game is playing Intro")
+
+	// If there are 6 stages, we move to next the next Game state
+	// after the 5th stage. Playing the 5th stage will crossfade
+	// into the 6th. If we check only for 6th, the crossfade will
+	// attempt to play the 7th and crash. This probably needs to
+	// be done better. TBD
+	if i.stageIndex >= len(i.stages)-1 {
+		return true, nil
+	}
 	stage := &i.stages[i.stageIndex]
 	// EngineLogger.Debug("Time now", "startedAt", stage.startedAt, "time since", time.Since(stage.startedAt), "duration", stage.displayTime, "running", stage.running)
 	if !stage.running {
@@ -64,7 +73,6 @@ func (i *IntroManager) Update(game *Game) error {
 		stage.startedAt = time.Now()
 		EngineLogger.Debug("Starting stage", "name", stage.name, "at", stage.startedAt)
 		if stage.track != nil { // Stage has a track
-			EngineLogger.Debug("Staget track is not nil")
 			if game.currentTrack == nil { // But nothing is playing
 				audioPlayer, err := stage.track.GetEbintenPlayer(game.audioContext) // Get ready to play
 				if err == nil {
@@ -83,7 +91,6 @@ func (i *IntroManager) Update(game *Game) error {
 				}
 			}
 		} // else { // The stage doesn't have a track
-		// 	EngineLogger.Debug("Staget track is nil")
 		// 	if game.currentTrack != nil { // If there's something playing
 		// 		err := game.currentTrack.Close() // Stop it
 		// 		if err != nil {
@@ -108,7 +115,7 @@ func (i *IntroManager) Update(game *Game) error {
 			EngineLogger.Debug("Going to next page")
 		}
 	}
-	return nil
+	return false, nil
 }
 
 func (i *IntroManager) Draw(screen *ebiten.Image, game *Game) {

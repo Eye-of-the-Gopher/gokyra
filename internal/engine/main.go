@@ -1,6 +1,7 @@
 package engine
 
 import (
+	"fmt"
 	"log/slog"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -23,13 +24,16 @@ type GameState int
 
 const (
 	GameIntro GameState = iota
+	GameCutScene
+	GameMenu
 	GamePlaying
 	GamePaused
 )
 
 type Game struct {
-	introManager *IntroManager
-	state        GameState
+	introManager    *IntroManager
+	cutSceneManager *CutSceneManager
+	state           GameState
 
 	assets       formats.Assets
 	audioContext *audio.Context
@@ -40,8 +44,6 @@ func NewGame(assetDir string, extraAssetDir string, enhanced bool) Game {
 	EngineLogger.Debug("Creating game")
 	assets := formats.LoadAssets(assetDir, extraAssetDir)
 	audioContext := audio.NewContext(44100)
-
-	assets.DumpAssets()
 
 	type SceneConfig struct {
 		name, asset, palette, trackname string
@@ -69,7 +71,6 @@ func NewGame(assetDir string, extraAssetDir string, enhanced bool) Game {
 			{"present", "PRESENT.CMP", "WESTWOOD.COL", "", 2, 1},
 			{"dand", "DAND.CMP", "WESTWOOD.COL", "", 8, 2},
 			{"intro", "INTRO.CPS", "EOBPAL.COL", "", 8, 2},
-			{"intro", "INTRO.CPS", "EOBPAL.COL", "", 5, 2},
 		}
 	}
 	var scenes []ImageStage
@@ -83,11 +84,13 @@ func NewGame(assetDir string, extraAssetDir string, enhanced bool) Game {
 	}
 
 	introManager := NewIntroManager(scenes)
+	cutsceneManager := NewCutSceneManager()
 	return Game{
-		introManager: introManager,
-		state:        GameIntro,
-		assets:       *assets,
-		audioContext: audioContext,
+		introManager:    introManager,
+		cutSceneManager: cutsceneManager,
+		state:           GameIntro,
+		assets:          *assets,
+		audioContext:    audioContext,
 	}
 
 }
@@ -95,7 +98,17 @@ func NewGame(assetDir string, extraAssetDir string, enhanced bool) Game {
 func (g *Game) Update() error {
 	switch g.state {
 	case GameIntro:
-		g.introManager.Update(g)
+		next, _ := g.introManager.Update(g)
+		if next {
+			g.state = GameCutScene
+		}
+	case GameCutScene:
+		next, _ := g.cutSceneManager.Update(g)
+		if next {
+			g.state = GameCutScene
+		}
+	case GameMenu:
+		fmt.Println("Menu : Not implemented")
 
 	}
 	return nil
@@ -105,6 +118,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	switch g.state {
 	case GameIntro:
 		g.introManager.Draw(screen, g)
+	case GameCutScene:
 
 	}
 	// screen.DrawImage(g.image, nil)
