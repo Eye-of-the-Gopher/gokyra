@@ -63,7 +63,8 @@ func (i *IntroManager) Update(game *Game) (bool, error) {
 	// into the 6th. If we check only for 6th, the crossfade will
 	// attempt to play the 7th and crash. This probably needs to
 	// be done better. TBD
-	if i.stageIndex >= len(i.stages)-1 {
+	if i.stageIndex >= len(i.stages) {
+		EngineLogger.Debug("Ending intro")
 		return true, nil
 	}
 	stage := &i.stages[i.stageIndex]
@@ -73,6 +74,7 @@ func (i *IntroManager) Update(game *Game) (bool, error) {
 		stage.startedAt = time.Now()
 		EngineLogger.Debug("Starting stage", "name", stage.name, "at", stage.startedAt)
 		if stage.track != nil { // Stage has a track
+			EngineLogger.Debug("Stage has a track", "track", stage.track)
 			if game.currentTrack == nil { // But nothing is playing
 				audioPlayer, err := stage.track.GetEbintenPlayer(game.audioContext) // Get ready to play
 				if err == nil {
@@ -90,29 +92,27 @@ func (i *IntroManager) Update(game *Game) (bool, error) {
 					game.currentTrack.Play()
 				}
 			}
-		} // else { // The stage doesn't have a track
-		// 	if game.currentTrack != nil { // If there's something playing
-		// 		err := game.currentTrack.Close() // Stop it
-		// 		if err != nil {
-		// 			EngineLogger.Warn("Couldn't stop current track ", "reason", err)
-		// 		}
-		// 	}
-		// }
+		}
 	} else {
-		if (time.Since(stage.startedAt) > stage.fadeStart) && !i.fading {
+		if (time.Since(stage.startedAt) > stage.fadeStart) && !i.fading { // Otherwise, start cross fade if appropriate
 			EngineLogger.Debug("Starting fade", "name", stage.name, "at", stage.fadeStart)
 			i.fading = true
 			i.fadeStart = time.Now()
 			i.fadeAlpha = 0
 		}
-		if i.fading {
+		if i.fading { //If fading is running, adjust screen alpha
 			i.fadeAlpha = time.Since(i.fadeStart).Seconds() / (float64(stage.displayTime.Seconds()) - float64(stage.fadeStart.Seconds()))
 		}
 
-		if time.Since(stage.startedAt) > stage.displayTime {
-			i.stageIndex++
-			i.fading = false
-			EngineLogger.Debug("Going to next page")
+		if time.Since(stage.startedAt) > stage.displayTime { //If time is up for this stage, then we need to decide what to do
+			if i.stageIndex == len(i.stages)-1 { // If it's the last stage, then tell the framework to move on
+				EngineLogger.Debug("On last page")
+				return true, nil
+			} else { // Else, go to the next scene
+				i.stageIndex++
+				i.fading = false
+				EngineLogger.Debug("Going to next page")
+			}
 		}
 	}
 	return false, nil
@@ -122,7 +122,7 @@ func (i *IntroManager) Draw(screen *ebiten.Image, game *Game) {
 	stage := i.stages[i.stageIndex]
 	img, _ := stage.image.GetEbitenImage()
 	screen.DrawImage(img, nil)
-	if i.fading {
+	if i.fading && i.stageIndex+1 < len(i.stages) {
 		nStage := i.stages[i.stageIndex+1]
 		nImg, _ := nStage.image.GetEbitenImage()
 		op := &ebiten.DrawImageOptions{}

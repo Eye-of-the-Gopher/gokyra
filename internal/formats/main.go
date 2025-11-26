@@ -91,6 +91,10 @@ func (a *AudioTrack) GetEbintenPlayer(ctx *audio.Context) (*audio.Player, error)
 
 }
 
+func (a *AudioTrack) String() string {
+	return fmt.Sprintf("Track : %s", a.track)
+}
+
 func (a *Assets) GetAudioTrack(name string) (*AudioTrack, error) {
 	ext := strings.ToLower(path.Ext(name))
 	AssetsLogger.Debug("Loading track", "name", name, "extension", ext)

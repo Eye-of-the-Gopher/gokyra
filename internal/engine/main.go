@@ -68,9 +68,9 @@ func NewGame(assetDir string, extraAssetDir string, enhanced bool) Game {
 			{"westwood", "WESTWOOD.CMP", "WESTWOOD.COL", "ENHANCED/INTRO.WAV", 8, 3},
 			{"westwood And", "AND.CMP", "WESTWOOD.COL", "", 3, 2},
 			{"ssi", "SSI.CMP", "WESTWOOD.COL", "", 5, 3},
-			{"present", "PRESENT.CMP", "WESTWOOD.COL", "", 2, 1},
-			{"dand", "DAND.CMP", "WESTWOOD.COL", "", 8, 2},
-			{"intro", "INTRO.CPS", "EOBPAL.COL", "", 8, 2},
+			{"present", "PRESENT.CMP", "WESTWOOD.COL", "", 3, 2},
+			{"dand", "DAND.CMP", "WESTWOOD.COL", "", 7, 2},
+			{"intro", "INTRO.CPS", "EOBPAL.COL", "ENHANCED/CUTSCENE.WAV", 4, 2},
 		}
 	}
 	var scenes []ImageStage
@@ -84,13 +84,18 @@ func NewGame(assetDir string, extraAssetDir string, enhanced bool) Game {
 	}
 
 	introManager := NewIntroManager(scenes)
-	cutsceneManager := NewCutSceneManager()
+	cutsceneManager, err := NewCutSceneManager(assets)
+	if err != nil {
+		panic(err)
+	}
+
 	return Game{
 		introManager:    introManager,
 		cutSceneManager: cutsceneManager,
 		state:           GameIntro,
-		assets:          *assets,
-		audioContext:    audioContext,
+		// state:        GameCutScene,
+		assets:       *assets,
+		audioContext: audioContext,
 	}
 
 }
@@ -119,7 +124,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	case GameIntro:
 		g.introManager.Draw(screen, g)
 	case GameCutScene:
-
+		g.cutSceneManager.Draw(screen, g)
 	}
 	// screen.DrawImage(g.image, nil)
 	ebitenutil.DebugPrint(screen, "Eye of the Gopher\nHello, Dungeon!")
