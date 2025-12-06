@@ -129,7 +129,6 @@ func (i *IntroManager) Draw(screen *ebiten.Image, game *Game) {
 		op.ColorScale.ScaleAlpha(float32(i.fadeAlpha)) // 0.0 to 1.0
 		screen.DrawImage(nImg, op)
 	}
-
 }
 
 func NewIntroManager(scenes []ImageStage) *IntroManager {

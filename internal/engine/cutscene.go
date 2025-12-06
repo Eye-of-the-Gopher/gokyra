@@ -2,11 +2,14 @@ package engine
 
 import (
 	"image"
+	"image/color"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/audio"
 	"github.com/nibrahim/eye-of-the-gopher/internal/formats"
 )
+
+type PixelIterator func() (image.Point, bool)
 
 // Framework here
 type CutSceneManager struct {
@@ -38,10 +41,10 @@ func NewCutSceneManager(assets *formats.Assets) (*CutSceneManager, error) {
 func (c *CutSceneManager) Update(game *Game) (bool, error) {
 	switch c.scene {
 	case 0:
-		EngineLogger.Debug("Update: Cut scene 0")
+		// EngineLogger.Debug("Update: Cut scene 0")
 		return c.Scene0Update(game)
 	case 1:
-		EngineLogger.Debug("Update: Cut scene 1")
+		// EngineLogger.Debug("Update: Cut scene 1")
 		return c.Scene1Update(game)
 	default:
 		EngineLogger.Warn("Scene not implemented yet", "scene", c.scene)
@@ -52,10 +55,10 @@ func (c *CutSceneManager) Update(game *Game) (bool, error) {
 func (c *CutSceneManager) Draw(screen *ebiten.Image, game *Game) {
 	switch c.scene {
 	case 0:
-		EngineLogger.Debug("Draw: Cut scene 0")
+		// EngineLogger.Debug("Draw: Cut scene 0")
 		c.Scene0Draw(screen, game)
 	case 1:
-		EngineLogger.Debug("Draw: Cut scene 1")
+		// EngineLogger.Debug("Draw: Cut scene 1")
 		c.Scene1Draw(screen, game)
 	default:
 		EngineLogger.Warn("Scene not implemented yet", "scene", c.scene)
@@ -66,6 +69,9 @@ func (c *CutSceneManager) Draw(screen *ebiten.Image, game *Game) {
 // actual scene 0 here. This is just a holding screen to fade out
 type Scene0 struct {
 	titleCard *ebiten.Image
+	clearing  bool
+	lineImg   *ebiten.Image
+	fader     PixelIterator
 }
 
 func NewScene0(c *CutSceneManager) (*Scene0, error) {
@@ -87,7 +93,42 @@ func NewScene0(c *CutSceneManager) (*Scene0, error) {
 
 	return &Scene0{
 		titleCard: titleCardImage,
+		clearing:  false,
 	}, nil
+}
+
+func (c *CutSceneManager) Scene0Update(game *Game) (bool, error) {
+	if c.scene0.lineImg == nil { // Create the fadeout line the first time
+		EngineLogger.Debug("I'm initting the lineImg")
+		c.scene0.lineImg = ebiten.NewImage(200, 200)
+		c.scene0.clearing = true
+		c.scene0.fader = fadeGridGen(0, 0, 20)
+	}
+
+	if c.scene0.clearing {
+		if pt, hasMore := c.scene0.fader(); hasMore {
+			// EngineLogger.Debug("Setting pixel", "x", pt.X, "y", pt.Y, "hasMore", hasMore)
+			c.scene0.lineImg.Set(pt.X, pt.Y, color.Black)
+		} else {
+			EngineLogger.Debug("We're done drawing the fading square")
+			c.scene0.clearing = false
+		}
+	}
+
+	return false, nil
+}
+
+func (c *CutSceneManager) Scene0Draw(screen *ebiten.Image, game *Game) {
+	screen.DrawImage(c.scene0.titleCard, nil)
+	if c.scene0.clearing {
+		for x := 0; x < 1000; x += 20 {
+			for y := 0; y < 500; y += 20 {
+				fop := &ebiten.DrawImageOptions{}
+				fop.GeoM.Translate(float64(x), float64(y))
+				screen.DrawImage(c.scene0.lineImg, fop)
+			}
+		}
+	}
 }
 
 // Actual scene 1 here
@@ -123,31 +164,7 @@ func NewScene1(c *CutSceneManager) (*Scene1, error) {
 
 }
 
-func (c *CutSceneManager) Scene0Update(game *Game) (bool, error) {
-	return false, nil
-}
-
-func (c *CutSceneManager) Scene0Draw(screen *ebiten.Image, game *Game) {
-	screen.DrawImage(c.scene0.titleCard, nil)
-}
-
 func (c *CutSceneManager) Scene1Update(game *Game) (bool, error) {
-	// start the audio track for the cutscene. This is for the whole scene
-	// if c.track == nil { // No music. Start playing something here
-	// 	track, err := c.assets.GetAudioTrack("ENHANCED/CUTSCENE.WAV")
-	// 	if err == nil {
-	// 		audioPlayer, err := track.GetEbintenPlayer(game.audioContext) // Get ready to play
-	// 		if err == nil {
-	// 			c.track = audioPlayer
-	// 			c.track.Play()
-	// 		} else {
-	// 			EngineLogger.Debug("Couldn't get player for track - ENHANCED/CUTSCENE.WAV")
-	// 		}
-	// 	} else {
-	// 		EngineLogger.Warn("Couldn't load track - ENHANCED/CUTSCENE.WAV")
-	// 	}
-	// }
-	// Now paint the text
 	if c.subtitle == nil {
 		c.subtitle = c.scene1.text1.(*ebiten.Image)
 	}
@@ -156,10 +173,104 @@ func (c *CutSceneManager) Scene1Update(game *Game) (bool, error) {
 }
 
 func (c *CutSceneManager) Scene1Draw(screen *ebiten.Image, game *Game) {
-	op := &ebiten.DrawImageOptions{}
-	op.GeoM.Translate(0, 669)
-	if c.subtitle != nil {
-		screen.DrawImage(c.subtitle, op)
+	// if c.scene1.clearing {
+	// 	for x := 0; x < 1000; x += 20 {
+	// 		for y := 0; y < 500; y += 20 {
+	// 			fop := &ebiten.DrawImageOptions{}
+	// 			fop.GeoM.Translate(float64(x), float64(y))
+	// 			screen.DrawImage(c.scene1.lineImg, fop)
+	// 		}
+	// 	}
+	// } else {
+	// 	op := &ebiten.DrawImageOptions{}
+	// 	op.GeoM.Translate(0, 669)
+	// 	if c.subtitle != nil {
+	// 		screen.DrawImage(c.subtitle, op)
+	// 	}
+
+	// }
+}
+
+// Helpers
+
+func fadeGridGen(x0, y0, edge int) PixelIterator {
+	i := 0
+	dir := 0
+	pt := image.Point{X: x0, Y: y0}
+
+	return func() (image.Point, bool) {
+		// EngineLogger.Debug("PixelIterator ", "i", i, "dir", dir, "point", pt)
+		if i >= edge {
+			dir += 1
+			i = 0
+			EngineLogger.Debug("Resetting i to 0", "dir", dir)
+		}
+
+		if dir == 5 {
+			EngineLogger.Debug("Returning here", "dir", dir)
+			return image.Point{}, false
+		}
+
+		switch dir {
+		case 0:
+			// EngineLogger.Debug("Incrementing X")
+			pt.X += 1
+		case 1:
+			// EngineLogger.Debug("Incrementing Y")
+			pt.Y += 1
+		case 2:
+			// EngineLogger.Debug("Decrementing X")
+			pt.X -= 1
+		case 3:
+			// EngineLogger.Debug("Decrementing Y")
+			pt.Y -= 1
+		}
+		i++
+		return pt, true // (value, has_more)
+
 	}
 
 }
+
+// func fadeGridGen(x0, y0, edge int) PixelIterator {
+// 	i := 0
+// 	dir := 0 // 0R, 1D, 2L, 3U
+// 	cEdge := edge
+
+// 	lx := x0
+// 	ly := y0
+// 	return func() (image.Point, bool) {
+// 		if edge <= 1 {
+// 			return image.Point{}, false // done
+// 		}
+// 		if i == cEdge {
+// 			i = 0
+// 			if dir == 3 {
+// 				cEdge -= 1
+// 			}
+// 			dir += 1
+// 			dir %= 4
+// 		}
+
+// 		pt := image.Point{}
+// 		switch dir {
+// 		case 0:
+// 			pt.X = lx + i
+// 			// pt.Y = y0 + i
+// 		case 1:
+// 			pt.Y = ly + i
+// 			// pt.Y = y0 + i
+// 		case 2:
+// 			pt.X = lx - i
+// 			// pt.Y = y0 + i
+// 		case 3:
+// 			pt.Y = ly - i
+// 			// pt.Y = y0 + i
+// 		}
+// 		lx = pt.X
+// 		ly = pt.Y
+// 		i += 1
+
+// 		return pt, true // (value, has_more)
+// 	}
+// }

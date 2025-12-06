@@ -6,7 +6,6 @@ import (
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/audio"
-	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/nibrahim/eye-of-the-gopher/internal/formats"
 	"github.com/nibrahim/eye-of-the-gopher/internal/utils"
 )
@@ -70,7 +69,7 @@ func NewGame(assetDir string, extraAssetDir string, enhanced bool) Game {
 			{"ssi", "SSI.CMP", "WESTWOOD.COL", "", 5, 3},
 			{"present", "PRESENT.CMP", "WESTWOOD.COL", "", 3, 2},
 			{"dand", "DAND.CMP", "WESTWOOD.COL", "", 7, 2},
-			{"intro", "INTRO.CPS", "EOBPAL.COL", "ENHANCED/CUTSCENE.WAV", 4, 2},
+			{"intro", "INTRO.CPS", "EOBPAL.COL", "", 4, 2}, //ENHANCED/CUTSCENE.WAV
 		}
 	}
 	var scenes []ImageStage
@@ -127,7 +126,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		g.cutSceneManager.Draw(screen, g)
 	}
 	// screen.DrawImage(g.image, nil)
-	ebitenutil.DebugPrint(screen, "Eye of the Gopher\nHello, Dungeon!")
+	// ebitenutil.DebugPrint(screen, "Eye of the Gopher\nHello, Dungeon!")
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
