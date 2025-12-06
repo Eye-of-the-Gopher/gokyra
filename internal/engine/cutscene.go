@@ -70,11 +70,12 @@ func (c *CutSceneManager) Draw(screen *ebiten.Image, game *Game) {
 
 // actual scene 0 here. This is just a holding screen to fade out
 type Scene0 struct {
-	titleCard *ebiten.Image
-	clearing  bool
-	lineImg   *ebiten.Image
-	fader     PixelIterator
-	done      bool
+	titleCard    *ebiten.Image
+	clearing     bool
+	lineImg      *ebiten.Image
+	fader        PixelIterator
+	done         bool
+	trackPlaying bool
 }
 
 func NewScene0(c *CutSceneManager) (*Scene0, error) {
@@ -95,12 +96,34 @@ func NewScene0(c *CutSceneManager) (*Scene0, error) {
 	}
 
 	return &Scene0{
-		titleCard: titleCardImage,
-		clearing:  false,
+		titleCard:    titleCardImage,
+		clearing:     false,
+		trackPlaying: false,
 	}, nil
 }
 
 func (c *CutSceneManager) Scene0Update(game *Game) (bool, error) {
+	if !c.scene0.trackPlaying {
+		EngineLogger.Debug("Loading cutscene track")
+		c.scene0.trackPlaying = true
+		if game.currentTrack != nil {
+			err := game.currentTrack.Close()
+			if err != nil {
+				EngineLogger.Warn("Couldn't stop current track ", "reason", err)
+			}
+		}
+		track, err := game.assets.GetAudioTrack("ENHANCED/CUTSCENE.WAV")
+		if err != nil {
+			EngineLogger.Warn("Couldn't load CUTSCENE.WAV audio")
+		}
+
+		audioPlayer, err := track.GetEbintenPlayer(game.audioContext) // and create a new player
+		if err == nil {
+			game.currentTrack = audioPlayer
+			game.currentTrack.Play()
+		}
+	}
+
 	if c.scene0.lineImg == nil { // Create the fadeout line the first time
 		EngineLogger.Debug("I'm initting the lineImg")
 		c.scene0.lineImg = ebiten.NewImage(200, 200)
