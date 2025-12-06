@@ -109,7 +109,7 @@ func (g *Game) Update() error {
 	case GameCutScene:
 		next, _ := g.cutSceneManager.Update(g)
 		if next {
-			g.state = GameCutScene
+			g.state = GameCutScene // Change this when done
 		}
 	case GameMenu:
 		fmt.Println("Menu : Not implemented")

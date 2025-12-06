@@ -41,11 +41,15 @@ func NewCutSceneManager(assets *formats.Assets) (*CutSceneManager, error) {
 func (c *CutSceneManager) Update(game *Game) (bool, error) {
 	switch c.scene {
 	case 0:
-		// EngineLogger.Debug("Update: Cut scene 0")
-		return c.Scene0Update(game)
+		next, _ := c.Scene0Update(game)
+		if next {
+			c.scene = 1
+		}
 	case 1:
-		// EngineLogger.Debug("Update: Cut scene 1")
-		return c.Scene1Update(game)
+		next, _ := c.Scene1Update(game)
+		if next {
+			c.scene = 1 // Go to next
+		}
 	default:
 		EngineLogger.Warn("Scene not implemented yet", "scene", c.scene)
 	}
@@ -55,10 +59,8 @@ func (c *CutSceneManager) Update(game *Game) (bool, error) {
 func (c *CutSceneManager) Draw(screen *ebiten.Image, game *Game) {
 	switch c.scene {
 	case 0:
-		// EngineLogger.Debug("Draw: Cut scene 0")
 		c.Scene0Draw(screen, game)
 	case 1:
-		// EngineLogger.Debug("Draw: Cut scene 1")
 		c.Scene1Draw(screen, game)
 	default:
 		EngineLogger.Warn("Scene not implemented yet", "scene", c.scene)
@@ -72,6 +74,7 @@ type Scene0 struct {
 	clearing  bool
 	lineImg   *ebiten.Image
 	fader     PixelIterator
+	done      bool
 }
 
 func NewScene0(c *CutSceneManager) (*Scene0, error) {
@@ -106,12 +109,16 @@ func (c *CutSceneManager) Scene0Update(game *Game) (bool, error) {
 	}
 
 	if c.scene0.clearing {
-		if pt, hasMore := c.scene0.fader(); hasMore {
-			// EngineLogger.Debug("Setting pixel", "x", pt.X, "y", pt.Y, "hasMore", hasMore)
-			c.scene0.lineImg.Set(pt.X, pt.Y, color.Black)
-		} else {
-			EngineLogger.Debug("We're done drawing the fading square")
-			c.scene0.clearing = false
+		for i := 0; i < 15; i++ {
+			if pt, hasMore := c.scene0.fader(); hasMore {
+				// EngineLogger.Debug("Setting pixel", "x", pt.X, "y", pt.Y, "hasMore", hasMore)
+				c.scene0.lineImg.Set(pt.X, pt.Y, color.Black)
+			} else {
+				EngineLogger.Debug("We're done drawing the fading square")
+				c.scene0.done = true
+				c.scene0.clearing = false
+				return true, nil
+			}
 		}
 	}
 
@@ -119,10 +126,19 @@ func (c *CutSceneManager) Scene0Update(game *Game) (bool, error) {
 }
 
 func (c *CutSceneManager) Scene0Draw(screen *ebiten.Image, game *Game) {
-	screen.DrawImage(c.scene0.titleCard, nil)
+	if c.scene0.done == true {
+		screen.Fill(color.Black)
+	} else {
+		screen.DrawImage(c.scene0.titleCard, nil)
+	}
+
 	if c.scene0.clearing {
-		for x := 0; x < 1000; x += 20 {
-			for y := 0; y < 500; y += 20 {
+		bounds := screen.Bounds()
+		width := bounds.Dx()  // Delta X (max.X - min.X)
+		height := bounds.Dy() // Delta Y (max.Y - min.Y)
+
+		for x := 0; x < width; x += 20 {
+			for y := 0; y < height; y += 20 {
 				fop := &ebiten.DrawImageOptions{}
 				fop.GeoM.Translate(float64(x), float64(y))
 				screen.DrawImage(c.scene0.lineImg, fop)
@@ -173,22 +189,12 @@ func (c *CutSceneManager) Scene1Update(game *Game) (bool, error) {
 }
 
 func (c *CutSceneManager) Scene1Draw(screen *ebiten.Image, game *Game) {
-	// if c.scene1.clearing {
-	// 	for x := 0; x < 1000; x += 20 {
-	// 		for y := 0; y < 500; y += 20 {
-	// 			fop := &ebiten.DrawImageOptions{}
-	// 			fop.GeoM.Translate(float64(x), float64(y))
-	// 			screen.DrawImage(c.scene1.lineImg, fop)
-	// 		}
-	// 	}
-	// } else {
-	// 	op := &ebiten.DrawImageOptions{}
-	// 	op.GeoM.Translate(0, 669)
-	// 	if c.subtitle != nil {
-	// 		screen.DrawImage(c.subtitle, op)
-	// 	}
+	op := &ebiten.DrawImageOptions{}
+	op.GeoM.Translate(0, 669)
+	if c.subtitle != nil {
+		screen.DrawImage(c.subtitle, op)
 
-	// }
+	}
 }
 
 // Helpers
@@ -199,16 +205,23 @@ func fadeGridGen(x0, y0, edge int) PixelIterator {
 	pt := image.Point{X: x0, Y: y0}
 
 	return func() (image.Point, bool) {
+		if edge <= 1 {
+			EngineLogger.Debug("We're done. Stopping now")
+			return image.Point{}, false
+		}
 		// EngineLogger.Debug("PixelIterator ", "i", i, "dir", dir, "point", pt)
 		if i >= edge {
 			dir += 1
 			i = 0
-			EngineLogger.Debug("Resetting i to 0", "dir", dir)
+			// EngineLogger.Debug("Resetting i to 0", "dir", dir)
 		}
 
-		if dir == 5 {
-			EngineLogger.Debug("Returning here", "dir", dir)
-			return image.Point{}, false
+		if dir == 4 {
+			edge -= 1
+			i = 0
+			dir = 0
+			pt = image.Point{X: x0, Y: y0}
+			// EngineLogger.Debug("Reducing edge", "edge", edge)
 		}
 
 		switch dir {
