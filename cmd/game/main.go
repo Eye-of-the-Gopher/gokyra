@@ -15,10 +15,10 @@ import (
 
 func main() {
 	formats.InitLogger(formats.AssetLoaderConfig{
-		AssetLevel: slog.LevelDebug,
+		AssetLevel: slog.LevelError,
 		CmpLevel:   slog.LevelError,
 		MazLevel:   slog.LevelError,
-		PakLevel:   slog.LevelDebug,
+		PakLevel:   slog.LevelError,
 		PalLevel:   slog.LevelError,
 	})
 
