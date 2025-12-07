@@ -30,13 +30,22 @@ const (
 )
 
 type Game struct {
+	// Internal
+	// Audio related
+	audioContext     *audio.Context
+	currentTrack     *audio.Player
+	currentTrackName string
+
+	// This allows us from move to one state (e.g. intro, cutscenes etc. to the next)
+	state GameState
+
+	// Managers are similar to Game structs. We delegate Update
+	// and Draw to them depending on stage
 	introManager    *IntroManager
 	cutSceneManager *CutSceneManager
-	state           GameState
 
-	assets       formats.Assets
-	audioContext *audio.Context
-	currentTrack *audio.Player
+	// Assets used in the game
+	assets formats.Assets
 }
 
 func NewGame(assetDir string, extraAssetDir string, enhanced bool) Game {
@@ -44,45 +53,7 @@ func NewGame(assetDir string, extraAssetDir string, enhanced bool) Game {
 	assets := formats.LoadAssets(assetDir, extraAssetDir)
 	audioContext := audio.NewContext(44100)
 
-	type SceneConfig struct {
-		name, asset, palette, trackname string
-		duration1, duration2            int
-	}
-
-	var configs []SceneConfig
-
-	if enhanced {
-		EngineLogger.Debug("Using enhanced assets")
-		configs = []SceneConfig{
-			{"westwood", "ENHANCED/WESTWOOD.PNG", "WESTWOOD.COL", "", 4, 3},
-			{"westwood And", "ENHANCED/AND.PNG", "WESTWOOD.COL", "", 3, 2},
-			{"ssi", "ENHANCED/SSI.PNG", "WESTWOOD.COL", "", 4, 3},
-			{"present", "ENHANCED/PRESENT.PNG", "WESTWOOD.COL", "", 3, 2},
-			{"dand", "ENHANCED/DAND.PNG", "WESTWOOD.COL", "", 3, 2},
-			{"dand", "ENHANCED/WESTWOOD.PNG", "WESTWOOD.COL", "", 3, 2},
-		}
-	} else {
-		EngineLogger.Debug("Using classic assets")
-		configs = []SceneConfig{
-			{"westwood", "WESTWOOD.CMP", "WESTWOOD.COL", "ENHANCED/INTRO.WAV", 8, 3},
-			// {"westwood And", "AND.CMP", "WESTWOOD.COL", "", 3, 2},
-			// {"ssi", "SSI.CMP", "WESTWOOD.COL", "", 5, 3},
-			// {"present", "PRESENT.CMP", "WESTWOOD.COL", "", 3, 2},
-			// {"dand", "DAND.CMP", "WESTWOOD.COL", "", 7, 2},
-			{"intro", "INTRO.CPS", "EOBPAL.COL", "", 2, 0}, //ENHANCED/CUTSCENE.WAV
-		}
-	}
-	var scenes []ImageStage
-	for _, c := range configs {
-		scene, err := NewImageStage(assets, c.name, c.asset, c.palette, c.trackname, c.duration1, c.duration2)
-		if err != nil {
-			EngineLogger.Error("Couldn't load asset ", "asset", c.asset, "error", err)
-			panic("Asset loading failed")
-		}
-		scenes = append(scenes, *scene)
-	}
-
-	introManager := NewIntroManager(scenes)
+	introManager := NewIntroManager(assets, enhanced)
 	cutsceneManager, err := NewCutSceneManager(assets)
 	if err != nil {
 		panic(err)
@@ -97,6 +68,30 @@ func NewGame(assetDir string, extraAssetDir string, enhanced bool) Game {
 		audioContext: audioContext,
 	}
 
+}
+
+func (g *Game) EnsureTrackPlaying(trackname string) {
+	if trackname == "" {
+		EngineLogger.Debug("No track to play here")
+	} else if g.currentTrackName == trackname {
+		EngineLogger.Debug("Track is already playing. Not changing", "name", trackname)
+	} else {
+		track, err := g.assets.GetAudioTrack(trackname)
+		if err != nil {
+			EngineLogger.Debug("Can't get track ", "name", trackname)
+		} else if g.currentTrack != nil && g.currentTrack.IsPlaying() { // There's something already playing
+			err := g.currentTrack.Close() // Stop it
+			if err != nil {
+				EngineLogger.Warn("Couldn't stop current track ", "reason", err, "name", g.currentTrackName)
+			}
+		}
+		audioPlayer, err := track.GetEbintenPlayer(g.audioContext) // and create a new player
+		if err == nil {
+			g.currentTrack = audioPlayer
+			g.currentTrack.Play()
+		}
+		g.currentTrackName = trackname
+	}
 }
 
 func (g *Game) Update() error {
@@ -135,5 +130,4 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
 
 func InitLogger(engineLevel slog.Level) {
 	EngineLogger = utils.InitLogger("engine", engineLevel)
-
 }

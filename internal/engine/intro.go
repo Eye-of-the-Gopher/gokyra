@@ -8,13 +8,14 @@ import (
 )
 
 type ImageStage struct { // This will later become an interface
-	startedAt    time.Time
-	running      bool
-	name         string
-	image        *formats.Sprite
-	fadeStart    time.Duration
-	displayTime  time.Duration
-	track        *formats.AudioTrack
+	startedAt   time.Time
+	running     bool
+	name        string
+	image       *formats.Sprite
+	fadeStart   time.Duration
+	displayTime time.Duration
+	// track        *formats.AudioTrack
+	track        string
 	trackStarted bool
 }
 
@@ -28,21 +29,13 @@ func NewImageStage(assets *formats.Assets, name string, assetName string, palett
 	if err != nil {
 		return nil, err
 	}
-	var track *formats.AudioTrack
-	if trackName != "" {
-		track, err = assets.GetAudioTrack(trackName)
-		if err != nil {
-			return nil, err
-		}
-	}
-
 	ret := ImageStage{
 		name:         name,
 		image:        image,
 		displayTime:  time.Duration(displayDuration) * time.Second,
 		fadeStart:    time.Duration(fadeDuration) * time.Second,
 		trackStarted: false,
-		track:        track,
+		track:        trackName,
 	}
 	return &ret, nil
 }
@@ -73,26 +66,7 @@ func (i *IntroManager) Update(game *Game) (bool, error) {
 		stage.running = true
 		stage.startedAt = time.Now()
 		EngineLogger.Debug("Starting stage", "name", stage.name, "at", stage.startedAt)
-		if stage.track != nil { // Stage has a track
-			EngineLogger.Debug("Stage has a track", "track", stage.track)
-			if game.currentTrack == nil { // But nothing is playing
-				audioPlayer, err := stage.track.GetEbintenPlayer(game.audioContext) // Get ready to play
-				if err == nil {
-					game.currentTrack = audioPlayer
-					game.currentTrack.Play()
-				}
-			} else if game.currentTrack.IsPlaying() { // There's something already playing
-				err := game.currentTrack.Close() // Stop it
-				if err != nil {
-					EngineLogger.Warn("Couldn't stop current track ", "reason", err)
-				}
-				audioPlayer, err := stage.track.GetEbintenPlayer(game.audioContext) // and create a new player
-				if err == nil {
-					game.currentTrack = audioPlayer
-					game.currentTrack.Play()
-				}
-			}
-		}
+		game.EnsureTrackPlaying(stage.track)
 	} else {
 		if (time.Since(stage.startedAt) > stage.fadeStart) && !i.fading { // Otherwise, start cross fade if appropriate
 			EngineLogger.Debug("Starting fade", "name", stage.name, "at", stage.fadeStart)
@@ -131,7 +105,44 @@ func (i *IntroManager) Draw(screen *ebiten.Image, game *Game) {
 	}
 }
 
-func NewIntroManager(scenes []ImageStage) *IntroManager {
+func NewIntroManager(assets *formats.Assets, enhanced bool) *IntroManager {
+	type SceneConfig struct {
+		name, asset, palette, trackname string
+		duration1, duration2            int
+	}
+
+	var configs []SceneConfig
+
+	if enhanced {
+		EngineLogger.Debug("Using enhanced assets")
+		configs = []SceneConfig{
+			{"westwood", "ENHANCED/WESTWOOD.PNG", "WESTWOOD.COL", "", 4, 3},
+			{"westwood And", "ENHANCED/AND.PNG", "WESTWOOD.COL", "", 3, 2},
+			{"ssi", "ENHANCED/SSI.PNG", "WESTWOOD.COL", "", 4, 3},
+			{"present", "ENHANCED/PRESENT.PNG", "WESTWOOD.COL", "", 3, 2},
+			{"dand", "ENHANCED/DAND.PNG", "WESTWOOD.COL", "", 3, 2},
+			{"dand", "ENHANCED/WESTWOOD.PNG", "WESTWOOD.COL", "", 3, 2},
+		}
+	} else {
+		EngineLogger.Debug("Using classic assets")
+		configs = []SceneConfig{
+			{"westwood", "WESTWOOD.CMP", "WESTWOOD.COL", "ENHANCED/INTRO.WAV", 8, 3},
+			// {"westwood And", "AND.CMP", "WESTWOOD.COL", "", 3, 2},
+			// {"ssi", "SSI.CMP", "WESTWOOD.COL", "", 5, 3},
+			// {"present", "PRESENT.CMP", "WESTWOOD.COL", "", 3, 2},
+			// {"dand", "DAND.CMP", "WESTWOOD.COL", "", 7, 2},
+			{"intro", "INTRO.CPS", "EOBPAL.COL", "", 2, 0}, //ENHANCED/CUTSCENE.WAV
+		}
+	}
+	var scenes []ImageStage
+	for _, c := range configs {
+		scene, err := NewImageStage(assets, c.name, c.asset, c.palette, c.trackname, c.duration1, c.duration2)
+		if err != nil {
+			EngineLogger.Error("Couldn't load asset ", "asset", c.asset, "error", err)
+			panic("Asset loading failed")
+		}
+		scenes = append(scenes, *scene)
+	}
 	ret := IntroManager{
 		fadeAlpha:  0,
 		fadeStart:  time.Time{},
