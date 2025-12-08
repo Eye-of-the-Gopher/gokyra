@@ -32,6 +32,7 @@ func main() {
 		fmt.Fprintf(os.Stderr, "  assetDirectory    Directory with original EOB .pak files (6 of them)\n")
 
 	}
+	scale := flag.Float64("scale", 4.0, "Scaling for all assets")
 	extraAssetDir := flag.String("extraAssetDir", "", "Directory to side load extra assets")
 	enhanced := flag.Bool("enhanced", false, "Use Side loaded enhanced assets")
 	flag.Parse()
@@ -41,9 +42,11 @@ func main() {
 	}
 
 	assetDir := flag.Args()[0]
-	game := engine.NewGame(assetDir, *extraAssetDir, *enhanced)
+	game := engine.NewGame(assetDir, scale, *extraAssetDir, *enhanced)
 
-	ebiten.SetWindowSize(engine.ScreenWidth, engine.ScreenHeight)
+	sw := int(float64(engine.ScreenWidth) * *scale)
+	sh := int(float64(engine.ScreenHeight) * *scale)
+	ebiten.SetWindowSize(sw, sh)
 	ebiten.SetWindowTitle("Eye Of The Gopher")
 	if err := ebiten.RunGame(&game); err != nil {
 		log.Fatal(err)

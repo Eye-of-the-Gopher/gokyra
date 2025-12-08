@@ -15,8 +15,8 @@ var (
 )
 
 const (
-	ScreenWidth  = 320 * 4
-	ScreenHeight = 200 * 4
+	ScreenWidth  = 320
+	ScreenHeight = 200
 )
 
 type GameState int
@@ -35,6 +35,7 @@ type Game struct {
 	audioContext     *audio.Context
 	currentTrack     *audio.Player
 	currentTrackName string
+	scale            float64
 
 	// This allows us from move to one state (e.g. intro, cutscenes etc. to the next)
 	state GameState
@@ -48,13 +49,13 @@ type Game struct {
 	assets formats.Assets
 }
 
-func NewGame(assetDir string, extraAssetDir string, enhanced bool) Game {
+func NewGame(assetDir string, scale *float64, extraAssetDir string, enhanced bool) Game {
 	EngineLogger.Debug("Creating game")
 	assets := formats.LoadAssets(assetDir, extraAssetDir)
 	audioContext := audio.NewContext(44100)
 
-	introManager := NewIntroManager(assets, enhanced)
-	cutsceneManager, err := NewCutSceneManager(assets)
+	introManager := NewIntroManager(assets, enhanced, *scale)
+	cutsceneManager, err := NewCutSceneManager(assets, *scale)
 	if err != nil {
 		panic(err)
 	}
@@ -63,6 +64,7 @@ func NewGame(assetDir string, extraAssetDir string, enhanced bool) Game {
 		introManager:    introManager,
 		cutSceneManager: cutsceneManager,
 		state:           GameIntro,
+		scale:           *scale,
 		// state:        GameCutScene,
 		assets:       *assets,
 		audioContext: audioContext,

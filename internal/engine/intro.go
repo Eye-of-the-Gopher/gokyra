@@ -19,13 +19,13 @@ type ImageStage struct { // This will later become an interface
 	trackStarted bool
 }
 
-func NewImageStage(assets *formats.Assets, name string, assetName string, paletteName string, trackName string, displayDuration int, fadeDuration int) (*ImageStage, error) {
+func NewImageStage(assets *formats.Assets, name string, assetName string, paletteName string, trackName string, displayDuration int, fadeDuration int, scale float64) (*ImageStage, error) {
 	p, err := assets.GetPalette(paletteName)
 	if err != nil {
 		return nil, err
 	}
 
-	image, err := assets.GetSprite(assetName, p, 320, 200, "")
+	image, err := assets.GetSprite(assetName, p, 320, 200, scale, "")
 	if err != nil {
 		return nil, err
 	}
@@ -41,6 +41,7 @@ func NewImageStage(assets *formats.Assets, name string, assetName string, palett
 }
 
 type IntroManager struct {
+	scale      float64
 	stageIndex int
 	stages     []ImageStage
 	fading     bool
@@ -105,7 +106,7 @@ func (i *IntroManager) Draw(screen *ebiten.Image, game *Game) {
 	}
 }
 
-func NewIntroManager(assets *formats.Assets, enhanced bool) *IntroManager {
+func NewIntroManager(assets *formats.Assets, enhanced bool, scale float64) *IntroManager {
 	type SceneConfig struct {
 		name, asset, palette, trackname string
 		duration1, duration2            int
@@ -136,7 +137,7 @@ func NewIntroManager(assets *formats.Assets, enhanced bool) *IntroManager {
 	}
 	var scenes []ImageStage
 	for _, c := range configs {
-		scene, err := NewImageStage(assets, c.name, c.asset, c.palette, c.trackname, c.duration1, c.duration2)
+		scene, err := NewImageStage(assets, c.name, c.asset, c.palette, c.trackname, c.duration1, c.duration2, scale)
 		if err != nil {
 			EngineLogger.Error("Couldn't load asset ", "asset", c.asset, "error", err)
 			panic("Asset loading failed")
@@ -144,6 +145,7 @@ func NewIntroManager(assets *formats.Assets, enhanced bool) *IntroManager {
 		scenes = append(scenes, *scene)
 	}
 	ret := IntroManager{
+		scale:      scale,
 		fadeAlpha:  0,
 		fadeStart:  time.Time{},
 		fading:     false,
