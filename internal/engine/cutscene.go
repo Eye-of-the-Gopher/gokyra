@@ -14,7 +14,6 @@ type CutSceneManager struct {
 	scene  int
 	assets *formats.Assets
 
-	subtitle *ebiten.Image
 	subtitle *ebiten.Image // The subtitle that is displayed. Cut out from the text sprite by each Update method and put here
 
 	scene0 *Scene0

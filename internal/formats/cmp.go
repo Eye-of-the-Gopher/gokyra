@@ -192,7 +192,12 @@ func CMPToImage(data []byte, palette color.Palette, origWidth int, origHeight in
 		for x := range origWidth {
 			index := y*origWidth + x
 			if index < len(data) {
-				img.Set(x, y, palette[data[index]])
+				colorIndex := data[index]
+				if colorIndex == 0 {
+					img.Set(x, y, color.RGBA{0, 0, 0, 0})
+				} else {
+					img.Set(x, y, palette[colorIndex])
+				}
 			}
 		}
 	}
