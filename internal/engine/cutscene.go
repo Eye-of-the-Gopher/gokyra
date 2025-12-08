@@ -11,11 +11,14 @@ type PixelIterator func() (image.Point, bool)
 
 // Framework here
 type CutSceneManager struct {
-	scene    int
-	assets   *formats.Assets
+	scene  int
+	assets *formats.Assets
+
 	subtitle *ebiten.Image
-	scene0   *Scene0
-	scene1   *Scene1
+	subtitle *ebiten.Image // The subtitle that is displayed. Cut out from the text sprite by each Update method and put here
+
+	scene0 *Scene0
+	scene1 *Scene1
 }
 
 func NewCutSceneManager(assets *formats.Assets) (*CutSceneManager, error) {
@@ -65,7 +68,6 @@ func (c *CutSceneManager) Draw(screen *ebiten.Image, game *Game) {
 }
 
 // Helpers
-
 func fadeGridGen(x0, y0, edge int) PixelIterator {
 	i := 0
 	dir := 0

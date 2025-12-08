@@ -156,6 +156,7 @@ func (a *Assets) GetSprite(name string, palette color.Palette, width uint, heigh
 				Image: img,
 			}, nil
 		} else {
+			PakLogger.Warn("Couldn't load ", "name", name)
 			return nil, fmt.Errorf("cannot fetch %s: No such asset", name)
 		}
 	case ".png":
@@ -175,6 +176,7 @@ func (a *Assets) GetSprite(name string, palette color.Palette, width uint, heigh
 				Image: img,
 			}, nil
 		} else {
+			PakLogger.Warn("Couldn't load ", "name", name)
 			return nil, fmt.Errorf("cannot fetch %s: No such asset", name)
 		}
 	default:
