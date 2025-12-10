@@ -183,7 +183,7 @@ func parseCmpBody(header CMPHeader, input []byte, palette color.Palette) ([]byte
 }
 
 // Converts a CMP data stream in data to an image.Image
-func CMPToImage(data []byte, palette color.Palette, origWidth int, origHeight int, scale float64) image.Image {
+func CMPToImage(data []byte, palette color.Palette, origWidth int, origHeight int) image.Image {
 	CmpLogger.Debug("Converting CMP PNG", "length", len(data))
 	img := image.NewRGBA(image.Rect(0, 0, origWidth, origHeight))
 
@@ -200,10 +200,6 @@ func CMPToImage(data []byte, palette color.Palette, origWidth int, origHeight in
 				}
 			}
 		}
-	}
-
-	if scale != 0 {
-		img = ResizeImage(img, origWidth*int(scale), origHeight*int(scale))
 	}
 
 	return img

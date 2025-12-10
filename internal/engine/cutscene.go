@@ -13,7 +13,6 @@ type PixelIterator func() (image.Point, bool)
 type CutSceneManager struct {
 	scene  int
 	assets *formats.Assets
-	scale  float64
 
 	subtitle *ebiten.Image // The subtitle that is displayed. Cut out from the text sprite by each Update method and put here
 
@@ -21,9 +20,8 @@ type CutSceneManager struct {
 	scene1 *Scene1
 }
 
-func NewCutSceneManager(assets *formats.Assets, scale float64) (*CutSceneManager, error) {
+func NewCutSceneManager(assets *formats.Assets) (*CutSceneManager, error) {
 	csm := &CutSceneManager{scene: 0,
-		scale:  scale,
 		assets: assets,
 	}
 	sm0, err := NewScene0(csm)

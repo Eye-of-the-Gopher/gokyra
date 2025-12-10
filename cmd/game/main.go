@@ -42,7 +42,7 @@ func main() {
 	}
 
 	assetDir := flag.Args()[0]
-	game := engine.NewGame(assetDir, scale, *extraAssetDir, *enhanced)
+	game := engine.NewGame(assetDir, *extraAssetDir, *enhanced)
 
 	sw := int(float64(engine.ScreenWidth) * *scale)
 	sh := int(float64(engine.ScreenHeight) * *scale)

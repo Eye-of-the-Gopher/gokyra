@@ -23,7 +23,7 @@ func NewScene1(c *CutSceneManager) (*Scene1, error) {
 		EngineLogger.Error("Couldn't load palette for cutscene ", "palette", "TOWRMAGE.COL")
 		return nil, err
 	}
-	textSprite, err := c.assets.GetSprite("TEXT.CMP", textPalette, 320, 200, c.scale, "")
+	textSprite, err := c.assets.GetSprite("TEXT.CMP", textPalette, 320, 200, "")
 	if err != nil {
 		EngineLogger.Error("Couldn't load Text sprite", "sprite", "TEXT.CMP")
 		return nil, err
@@ -35,7 +35,7 @@ func NewScene1(c *CutSceneManager) (*Scene1, error) {
 		return nil, err
 	}
 
-	towrmage, err := c.assets.GetSprite("TOWRMAGE.CMP", textPalette, 320, 200, c.scale, "")
+	towrmage, err := c.assets.GetSprite("TOWRMAGE.CMP", textPalette, 320, 200, "")
 	towrmageImage, err := towrmage.GetEbitenImage()
 	if err != nil {
 		EngineLogger.Error("Couldn't load Towrmage sprite sheet", "sprite", "TOWRMAGE.CMP")

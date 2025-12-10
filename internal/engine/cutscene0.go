@@ -21,7 +21,7 @@ func NewScene0(c *CutSceneManager) (*Scene0, error) {
 		EngineLogger.Error("Couldn't load palette for title card ", "palette", "EOBPAL.COL")
 		return nil, err
 	}
-	titleCard, err := c.assets.GetSprite("INTRO.CPS", palette, 320, 200, c.scale, "")
+	titleCard, err := c.assets.GetSprite("INTRO.CPS", palette, 320, 200, "")
 	if err != nil {
 		EngineLogger.Error("Couldn't load  title card sprite", "sprite", "INTRO.CPS")
 		return nil, err

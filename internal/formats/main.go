@@ -7,7 +7,6 @@ import (
 	"image/color"
 	"io"
 	"log/slog"
-	"math"
 	"path"
 	"strings"
 
@@ -142,7 +141,7 @@ func (a *Assets) GetPalette(name string) (color.Palette, error) {
 	}
 }
 
-func (a *Assets) GetSprite(name string, palette color.Palette, width uint, height uint, scale float64, prefix string) (*Sprite, error) {
+func (a *Assets) GetSprite(name string, palette color.Palette, width uint, height uint, prefix string) (*Sprite, error) {
 	ext := strings.ToLower(path.Ext(name))
 	PakLogger.Debug("Loading sprite", "name", name, "extension", ext)
 	switch ext {
@@ -150,7 +149,7 @@ func (a *Assets) GetSprite(name string, palette color.Palette, width uint, heigh
 		data, exists := a.assets[name]
 		if exists {
 			imgData := DecodeCmp(name, data, palette)
-			img := CMPToImage(imgData, palette, int(width), int(height), scale)
+			img := CMPToImage(imgData, palette, int(width), int(height))
 			PakLogger.Debug("Sending back", "len", len(data))
 			return &Sprite{
 				name:  name,
@@ -165,9 +164,7 @@ func (a *Assets) GetSprite(name string, palette color.Palette, width uint, heigh
 		if exists {
 			imgData := bytes.NewReader(data)
 			img, format, err := image.Decode(imgData)
-			w := uint(math.Floor(float64(width) * scale))
-			h := uint(math.Floor(float64(height) * scale))
-			img = resize.Resize(w, h, img, resize.Lanczos3)
+			img = resize.Resize(width, height, img, resize.Lanczos3)
 			PakLogger.Debug("Decoding image ", "name", name, "format", format)
 			if err != nil {
 				PakLogger.Error("couldn't decode image", "image", name)
