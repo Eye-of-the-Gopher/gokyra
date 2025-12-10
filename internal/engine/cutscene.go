@@ -16,13 +16,18 @@ type CutSceneManager struct {
 
 	subtitle *ebiten.Image // The subtitle that is displayed. Cut out from the text sprite by each Update method and put here
 
+	frameCntr  int
+	frameDelay int // Will run update only these many times
+
 	scene0 *Scene0
 	scene1 *Scene1
 }
 
 func NewCutSceneManager(assets *formats.Assets) (*CutSceneManager, error) {
 	csm := &CutSceneManager{scene: 0,
-		assets: assets,
+		assets:     assets,
+		frameCntr:  0,
+		frameDelay: 5,
 	}
 	sm0, err := NewScene0(csm)
 	sm1, err := NewScene1(csm)
@@ -37,21 +42,26 @@ func NewCutSceneManager(assets *formats.Assets) (*CutSceneManager, error) {
 }
 
 func (c *CutSceneManager) Update(game *Game) (bool, error) {
-	switch c.scene {
-	case 0:
-		next, _ := c.Scene0Update(game)
-		if next {
-			c.scene = 1
+	c.frameCntr += 1
+	if c.frameCntr == c.frameDelay {
+		switch c.scene {
+		case 0:
+			next, _ := c.Scene0Update(game)
+			if next {
+				c.scene = 1
+			}
+		case 1:
+			next, _ := c.Scene1Update(game)
+			if next {
+				c.scene = 1 // Go to next
+			}
+		default:
+			EngineLogger.Warn("Scene not implemented yet", "scene", c.scene)
 		}
-	case 1:
-		next, _ := c.Scene1Update(game)
-		if next {
-			c.scene = 1 // Go to next
-		}
-	default:
-		EngineLogger.Warn("Scene not implemented yet", "scene", c.scene)
+		c.frameCntr = 0
 	}
 	return false, nil
+
 }
 
 func (c *CutSceneManager) Draw(screen *ebiten.Image, game *Game) {

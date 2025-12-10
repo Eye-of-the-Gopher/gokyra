@@ -6,6 +6,7 @@ import (
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/audio"
+	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/nibrahim/eye-of-the-gopher/internal/formats"
 	"github.com/nibrahim/eye-of-the-gopher/internal/utils"
 )
@@ -121,6 +122,8 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		g.cutSceneManager.Draw(screen, g)
 	}
 	// screen.DrawImage(g.image, nil)
+	fps := ebiten.ActualFPS()
+	ebitenutil.DebugPrint(screen, fmt.Sprintf("FPS: %.2f", fps))
 	// ebitenutil.DebugPrint(screen, "Eye of the Gopher\nHello, Dungeon!")
 }
 

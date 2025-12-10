@@ -48,6 +48,7 @@ func main() {
 	sh := int(float64(engine.ScreenHeight) * *scale)
 	ebiten.SetWindowSize(sw, sh)
 	ebiten.SetWindowTitle("Eye Of The Gopher")
+	// ebiten.SetTPS(20) // Run Update() at 30hz instead of 60hz
 	if err := ebiten.RunGame(&game); err != nil {
 		log.Fatal(err)
 	}

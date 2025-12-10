@@ -128,10 +128,10 @@ func NewIntroManager(assets *formats.Assets, enhanced bool) *IntroManager {
 		EngineLogger.Debug("Using classic assets")
 		configs = []SceneConfig{
 			{"westwood", "WESTWOOD.CMP", "WESTWOOD.COL", "ENHANCED/INTRO.WAV", 8, 3},
-			{"westwood And", "AND.CMP", "WESTWOOD.COL", "", 3, 2},
-			{"ssi", "SSI.CMP", "WESTWOOD.COL", "", 5, 3},
-			{"present", "PRESENT.CMP", "WESTWOOD.COL", "", 3, 2},
-			{"dand", "DAND.CMP", "WESTWOOD.COL", "", 7, 2},
+			// {"westwood And", "AND.CMP", "WESTWOOD.COL", "", 3, 2},
+			// {"ssi", "SSI.CMP", "WESTWOOD.COL", "", 5, 3},
+			// {"present", "PRESENT.CMP", "WESTWOOD.COL", "", 3, 2},
+			// {"dand", "DAND.CMP", "WESTWOOD.COL", "", 7, 2},
 			{"intro", "INTRO.CPS", "EOBPAL.COL", "", 2, 0}, //ENHANCED/CUTSCENE.WAV
 		}
 	}
