@@ -44,10 +44,11 @@ func (c *CutSceneManager) Scene0Update(game *Game) (bool, error) {
 		EngineLogger.Debug("I'm initting the lineImg")
 		c.scene0.lineImg = ebiten.NewImage(200, 200)
 		c.scene0.clearing = true
-		c.scene0.fader = fadeGridGen(0, 0, 20)
+		c.scene0.fader = fadeGridGen(0, 0, 10)
 	}
 	if c.scene0.clearing {
-		for i := 0; i < 15; i++ {
+		pixelsToConsume := 15
+		for i := 0; i < pixelsToConsume; i++ {
 			if pt, hasMore := c.scene0.fader(); hasMore {
 				c.scene0.lineImg.Set(pt.X, pt.Y, color.Black)
 			} else {
@@ -74,8 +75,8 @@ func (c *CutSceneManager) Scene0Draw(screen *ebiten.Image, game *Game) {
 		width := bounds.Dx()  // Delta X (max.X - min.X)
 		height := bounds.Dy() // Delta Y (max.Y - min.Y)
 
-		for x := 0; x < width; x += 20 {
-			for y := 0; y < height; y += 20 {
+		for x := 0; x < width; x += 11 {
+			for y := 0; y < height; y += 11 {
 				fop := &ebiten.DrawImageOptions{}
 				fop.GeoM.Translate(float64(x), float64(y))
 				screen.DrawImage(c.scene0.lineImg, fop)
