@@ -54,6 +54,13 @@ func (s *Sprite) GetEbitenImage() (*ebiten.Image, error) {
 	return ret, nil
 }
 
+func (s *Sprite) GetEbitenImageRegion(x0, y0, x1, y1 int) *ebiten.Image {
+	img := ebiten.NewImageFromImage(s.Image)
+	srcRect := image.Rect(x0, y0, x1, y1)
+	subImage := img.SubImage(srcRect)
+	return ebiten.NewImageFromImage(subImage)
+}
+
 type AudioTrack struct {
 	track  string
 	data   []byte

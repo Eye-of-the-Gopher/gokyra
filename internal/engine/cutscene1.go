@@ -23,47 +23,16 @@ func NewScene1(c *CutSceneManager) (*Scene1, error) {
 		EngineLogger.Error("Couldn't load palette for cutscene ", "palette", "TOWRMAGE.COL")
 		return nil, err
 	}
-	textSprite, err := c.assets.GetSprite("TEXT.CMP", textPalette, 320, 200, "")
-	if err != nil {
-		EngineLogger.Error("Couldn't load Text sprite", "sprite", "TEXT.CMP")
-		return nil, err
-	}
-
-	srcRect := image.Rect(0, 0, 320, 31)
-	textSpriteImage, err := textSprite.GetEbitenImage()
-	if err != nil {
-		return nil, err
-	}
-
 	towrmage, err := c.assets.GetSprite("TOWRMAGE.CMP", textPalette, 320, 200, "")
-	towrmageImage, err := towrmage.GetEbitenImage()
 	if err != nil {
 		EngineLogger.Error("Couldn't load Towrmage sprite sheet", "sprite", "TOWRMAGE.CMP")
 		return nil, err
 	}
-	// mageSprite, _ := c.assets.GetSprite("ENHANCED/X.PNG", textPalette, 120, 100, "")
-	// i, _ := mageSprite.GetEbitenImage()
-
-	// bounds := towerSprite.Image.Bounds()
-	// fmt.Printf("Image dimensions: %dx%d\n", bounds.Dx(), bounds.Dy())
-
-	// These rect dimentions were arrived at by
-	// experimentation. 513 and 1023 seem to make sense. (512,
-	// 1024) but not sure about the heights
-
-	// towerShaftRect := image.Rect(513, 417, 1023, 671)
-	towerShaftRect := image.Rect(128, 104, 256, 167)
-
-	windowRect := image.Rect(0, 0, 128, 143) //
-
-	mageCircleRect := image.Rect(128, 0, 256, 104)
 
 	return &Scene1{
-		towerSprite:      towrmageImage.SubImage(towerShaftRect),
-		windowSprite:     towrmageImage.SubImage(windowRect),
-		mageCircleSprite: towrmageImage.SubImage(mageCircleRect),
-		textSprite:       textSprite,
-		text1:            textSpriteImage.SubImage(srcRect),
+		towerSprite:      towrmage.GetEbitenImageRegion(128, 104, 256, 167),
+		windowSprite:     towrmage.GetEbitenImageRegion(0, 0, 128, 143),
+		mageCircleSprite: towrmage.GetEbitenImageRegion(128, 0, 256, 104),
 		scrollOffset:     0,
 	}, nil
 
@@ -71,7 +40,7 @@ func NewScene1(c *CutSceneManager) (*Scene1, error) {
 
 func (c *CutSceneManager) Scene1Update(game *Game) (bool, error) {
 	if c.subtitle == nil {
-		c.subtitle = c.scene1.text1.(*ebiten.Image)
+		c.subtitle = c.subtitles[0] // We the lord of waterdeep...
 	}
 
 	if c.scene1.scrollOffset <= 63*3+16 { // 63 is the height of the shaft segment. We move 3 segments down + 16 pixels for the extra in the window
