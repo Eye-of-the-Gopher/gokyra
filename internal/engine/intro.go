@@ -20,12 +20,7 @@ type ImageStage struct { // This will later become an interface
 }
 
 func NewImageStage(assets *formats.Assets, name string, assetName string, paletteName string, trackName string, displayDuration int, fadeDuration int) (*ImageStage, error) {
-	p, err := assets.GetPalette(paletteName)
-	if err != nil {
-		return nil, err
-	}
-
-	image, err := assets.GetSprite(assetName, p, 320, 200, "")
+	image, err := assets.GetSprite(assetName, paletteName, 320, 200, "")
 	if err != nil {
 		return nil, err
 	}

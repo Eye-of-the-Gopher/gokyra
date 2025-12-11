@@ -148,7 +148,11 @@ func (a *Assets) GetPalette(name string) (color.Palette, error) {
 	}
 }
 
-func (a *Assets) GetSprite(name string, palette color.Palette, width uint, height uint, prefix string) (*Sprite, error) {
+func (a *Assets) GetSprite(name string, paletteName string, width uint, height uint, prefix string) (*Sprite, error) {
+	palette, err := a.GetPalette(paletteName)
+	if err != nil {
+		PakLogger.Error("Couldn't load palette", "name", paletteName)
+	}
 	ext := strings.ToLower(path.Ext(name))
 	PakLogger.Debug("Loading sprite", "name", name, "extension", ext)
 	switch ext {

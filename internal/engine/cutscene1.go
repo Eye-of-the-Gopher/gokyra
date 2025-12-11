@@ -20,12 +20,7 @@ type Scene1 struct {
 }
 
 func NewScene1(c *CutSceneManager) (*Scene1, error) {
-	textPalette, err := c.assets.GetPalette("TOWRMAGE.COL")
-	if err != nil {
-		EngineLogger.Error("Couldn't load palette for cutscene ", "palette", "TOWRMAGE.COL")
-		return nil, err
-	}
-	towrmage, err := c.assets.GetSprite("TOWRMAGE.CMP", textPalette, 320, 200, "")
+	towrmage, err := c.assets.GetSprite("TOWRMAGE.CMP", "TOWRMAGE.COL", 320, 200, "")
 	if err != nil {
 		EngineLogger.Error("Couldn't load Towrmage sprite sheet", "sprite", "TOWRMAGE.CMP")
 		return nil, err

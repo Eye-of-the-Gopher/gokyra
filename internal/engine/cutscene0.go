@@ -16,12 +16,7 @@ type Scene0 struct {
 }
 
 func NewScene0(c *CutSceneManager) (*Scene0, error) {
-	palette, err := c.assets.GetPalette("EOBPAL.COL")
-	if err != nil {
-		EngineLogger.Error("Couldn't load palette for title card ", "palette", "EOBPAL.COL")
-		return nil, err
-	}
-	titleCard, err := c.assets.GetSprite("INTRO.CPS", palette, 320, 200, "")
+	titleCard, err := c.assets.GetSprite("INTRO.CPS", "EOBPAL.COL", 320, 200, "")
 	if err != nil {
 		EngineLogger.Error("Couldn't load  title card sprite", "sprite", "INTRO.CPS")
 		return nil, err

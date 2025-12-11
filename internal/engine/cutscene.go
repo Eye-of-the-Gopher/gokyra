@@ -104,13 +104,7 @@ func (c *CutSceneManager) Draw(screen *ebiten.Image, game *Game) {
 // Helpers
 
 func loadSubtitles(assets *formats.Assets) ([]*ebiten.Image, error) {
-	textPalette, err := assets.GetPalette("TOWRMAGE.COL")
-	if err != nil {
-		EngineLogger.Error("Couldn't load palette for cutscene ", "palette", "TOWRMAGE.COL")
-		return nil, err
-	}
-
-	subtitleSprite, err := assets.GetSprite("TEXT.CMP", textPalette, 320, 200, "")
+	subtitleSprite, err := assets.GetSprite("TEXT.CMP", "TOWRMAGE.COL", 320, 200, "")
 	if err != nil {
 		EngineLogger.Error("Couldn't load Text sprite", "sprite", "TEXT.CMP")
 		return nil, err
