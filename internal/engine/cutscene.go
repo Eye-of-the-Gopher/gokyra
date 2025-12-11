@@ -22,6 +22,7 @@ type CutSceneManager struct {
 
 	scene0 *Scene0
 	scene1 *Scene1
+	scene2 *Scene2
 }
 
 func NewCutSceneManager(assets *formats.Assets) (*CutSceneManager, error) {
@@ -39,12 +40,14 @@ func NewCutSceneManager(assets *formats.Assets) (*CutSceneManager, error) {
 
 	sm0, err := NewScene0(csm)
 	sm1, err := NewScene1(csm)
+	sm2, err := NewScene2(csm)
 
 	if err != nil {
 		return nil, err
 	}
 	csm.scene0 = sm0
 	csm.scene1 = sm1
+	csm.scene2 = sm2
 	return csm, nil
 
 }
@@ -61,7 +64,12 @@ func (c *CutSceneManager) Update(game *Game) (bool, error) {
 		case 1:
 			next, _ := c.Scene1Update(game)
 			if next {
-				c.scene = 1 // Go to next
+				c.scene = 2 // Go to next
+			}
+		case 2:
+			next, _ := c.Scene2Update(game)
+			if next {
+				c.scene = 2 // Go to next
 			}
 		default:
 			EngineLogger.Warn("Scene not implemented yet", "scene", c.scene)
@@ -78,6 +86,8 @@ func (c *CutSceneManager) Draw(screen *ebiten.Image, game *Game) {
 		c.Scene0Draw(screen, game)
 	case 1:
 		c.Scene1Draw(screen, game)
+	case 2:
+		c.Scene2Draw(screen, game)
 	default:
 		EngineLogger.Warn("Scene not implemented yet", "scene", c.scene)
 	}
@@ -106,7 +116,7 @@ func loadSubtitles(assets *formats.Assets) ([]*ebiten.Image, error) {
 		return nil, err
 	}
 	ret := []*ebiten.Image{}
-	ret = append(ret, subtitleSprite.GetEbitenImageRegion(0, 0, 320, 31))    // We the lord of waterdeep...
+	ret = append(ret, subtitleSprite.GetEbitenImageRegion(0, 0, 320, 32))    // We the lord of waterdeep...
 	ret = append(ret, subtitleSprite.GetEbitenImageRegion(0, 32, 320, 67))   // Give call to the heroes of the land...
 	ret = append(ret, subtitleSprite.GetEbitenImageRegion(0, 67, 320, 80))   // Master..
 	ret = append(ret, subtitleSprite.GetEbitenImageRegion(0, 80, 320, 96))   // They think they have found...
