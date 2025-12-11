@@ -90,11 +90,11 @@ func (i *IntroManager) Update(game *Game) (bool, error) {
 
 func (i *IntroManager) Draw(screen *ebiten.Image, game *Game) {
 	stage := i.stages[i.stageIndex]
-	img, _ := stage.image.GetEbitenImage()
+	img := stage.image.GetEbitenImage()
 	screen.DrawImage(img, nil)
 	if i.fading && i.stageIndex+1 < len(i.stages) {
 		nStage := i.stages[i.stageIndex+1]
-		nImg, _ := nStage.image.GetEbitenImage()
+		nImg := nStage.image.GetEbitenImage()
 		op := &ebiten.DrawImageOptions{}
 		op.ColorScale.ScaleAlpha(float32(i.fadeAlpha)) // 0.0 to 1.0
 		screen.DrawImage(nImg, op)
@@ -123,10 +123,10 @@ func NewIntroManager(assets *formats.Assets, enhanced bool) *IntroManager {
 		EngineLogger.Debug("Using classic assets")
 		configs = []SceneConfig{
 			{"westwood", "WESTWOOD.CMP", "WESTWOOD.COL", "ENHANCED/INTRO.WAV", 8, 3},
-			{"westwood And", "AND.CMP", "WESTWOOD.COL", "", 3, 2},
-			{"ssi", "SSI.CMP", "WESTWOOD.COL", "", 5, 3},
-			{"present", "PRESENT.CMP", "WESTWOOD.COL", "", 3, 2},
-			{"dand", "DAND.CMP", "WESTWOOD.COL", "", 7, 2},
+			// {"westwood And", "AND.CMP", "WESTWOOD.COL", "", 3, 2},
+			// {"ssi", "SSI.CMP", "WESTWOOD.COL", "", 5, 3},
+			// {"present", "PRESENT.CMP", "WESTWOOD.COL", "", 3, 2},
+			// {"dand", "DAND.CMP", "WESTWOOD.COL", "", 7, 2},
 			{"intro", "INTRO.CPS", "EOBPAL.COL", "ENHANCED/CUTSCENE.WAV", 2, 0},
 		}
 	}

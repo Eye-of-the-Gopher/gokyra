@@ -38,6 +38,9 @@ type Assets struct {
 	assets map[string][]byte
 }
 
+// type PixelIterator func() (image.Point, bool)
+type FadeIterator func() (*ebiten.Image, bool)
+
 func NewAssets() *Assets {
 	return &Assets{
 		assets: make(map[string][]byte),
@@ -49,16 +52,35 @@ type Sprite struct {
 	name  string
 }
 
-func (s *Sprite) GetEbitenImage() (*ebiten.Image, error) {
+func (s *Sprite) GetEbitenImage() *ebiten.Image {
 	ret := ebiten.NewImageFromImage(s.Image)
-	return ret, nil
+	return ret
 }
 
-func (s *Sprite) GetEbitenImageRegion(x0, y0, x1, y1 int) *ebiten.Image {
+func (s *Sprite) GetImageRegion(x0, y0, x1, y1 int) *Sprite {
 	img := ebiten.NewImageFromImage(s.Image)
 	srcRect := image.Rect(x0, y0, x1, y1)
 	subImage := img.SubImage(srcRect)
-	return ebiten.NewImageFromImage(subImage)
+	return &Sprite{
+		Image: subImage,
+		name:  s.name,
+	}
+}
+
+func (s *Sprite) GetEbitenImageFader() FadeIterator {
+	count := 5
+
+	ret := func() (*ebiten.Image, bool) {
+		if count != 0 {
+			count -= 1
+			AssetsLogger.Debug("FadeIterator going on", "count", count)
+			img := s.GetEbitenImage()
+			return img, true
+		} else {
+			return nil, false
+		}
+	}
+	return ret
 }
 
 type AudioTrack struct {

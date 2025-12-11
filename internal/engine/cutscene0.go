@@ -21,12 +21,7 @@ func NewScene0(c *CutSceneManager) (*Scene0, error) {
 		EngineLogger.Error("Couldn't load  title card sprite", "sprite", "INTRO.CPS")
 		return nil, err
 	}
-	titleCardImage, err := titleCard.GetEbitenImage()
-	if err != nil {
-		EngineLogger.Error("Couldn't convert title card sprite into image", "image", "intro.cps")
-		return nil, err
-	}
-
+	titleCardImage := titleCard.GetEbitenImage()
 	return &Scene0{
 		titleCard: titleCardImage,
 		clearing:  false,

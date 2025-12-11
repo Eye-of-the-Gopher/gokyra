@@ -27,9 +27,9 @@ func NewScene1(c *CutSceneManager) (*Scene1, error) {
 	}
 
 	return &Scene1{
-		towerSprite:      towrmage.GetEbitenImageRegion(128, 104, 256, 167),
-		windowSprite:     towrmage.GetEbitenImageRegion(0, 0, 128, 143),
-		mageCircleSprite: towrmage.GetEbitenImageRegion(128, 0, 256, 104),
+		towerSprite:      towrmage.GetImageRegion(128, 104, 256, 167).GetEbitenImage(),
+		windowSprite:     towrmage.GetImageRegion(0, 0, 128, 143).GetEbitenImage(),
+		mageCircleSprite: towrmage.GetImageRegion(128, 0, 256, 104).GetEbitenImage(),
 		scrollOffset:     0,
 		holdCounter:      0,
 		holdLimit:        15,
