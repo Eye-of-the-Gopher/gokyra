@@ -127,7 +127,7 @@ func NewIntroManager(assets *formats.Assets, enhanced bool) *IntroManager {
 			{"ssi", "SSI.CMP", "WESTWOOD.COL", "", 5, 3},
 			{"present", "PRESENT.CMP", "WESTWOOD.COL", "", 3, 2},
 			{"dand", "DAND.CMP", "WESTWOOD.COL", "", 7, 2},
-			{"intro", "INTRO.CPS", "EOBPAL.COL", "", 2, 0}, //ENHANCED/CUTSCENE.WAV
+			{"intro", "INTRO.CPS", "EOBPAL.COL", "ENHANCED/CUTSCENE.WAV", 2, 0},
 		}
 	}
 	var scenes []ImageStage
