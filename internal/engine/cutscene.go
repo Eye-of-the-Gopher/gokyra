@@ -40,7 +40,7 @@ func NewCutSceneManager(assets *formats.Assets) (*CutSceneManager, error) {
 
 	sm0, err := NewScene0(csm)
 	sm1, err := NewScene1(csm)
-	sm2, err := NewScene2(csm)
+	sm2, err := NewScene2(csm, sm1.mageCircleSprite)
 
 	if err != nil {
 		return nil, err
