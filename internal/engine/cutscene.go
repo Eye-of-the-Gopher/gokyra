@@ -81,6 +81,13 @@ func (c *CutSceneManager) Draw(screen *ebiten.Image, game *Game) {
 	default:
 		EngineLogger.Warn("Scene not implemented yet", "scene", c.scene)
 	}
+	if c.subtitle != nil {
+		op := &ebiten.DrawImageOptions{}
+		subtitleHeight := c.subtitle.Bounds().Dy()
+		screenHeight := screen.Bounds().Dy()
+		op.GeoM.Translate(0, float64(screenHeight-subtitleHeight))
+		screen.DrawImage(c.subtitle, op)
+	}
 
 }
 

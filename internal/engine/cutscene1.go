@@ -15,6 +15,8 @@ type Scene1 struct {
 	textSprite       *formats.Sprite
 	text1            image.Image
 	scrollOffset     int
+	holdCounter      int
+	holdLimit        int
 }
 
 func NewScene1(c *CutSceneManager) (*Scene1, error) {
@@ -34,6 +36,8 @@ func NewScene1(c *CutSceneManager) (*Scene1, error) {
 		windowSprite:     towrmage.GetEbitenImageRegion(0, 0, 128, 143),
 		mageCircleSprite: towrmage.GetEbitenImageRegion(128, 0, 256, 104),
 		scrollOffset:     0,
+		holdCounter:      0,
+		holdLimit:        15,
 	}, nil
 
 }
@@ -43,11 +47,18 @@ func (c *CutSceneManager) Scene1Update(game *Game) (bool, error) {
 		c.subtitle = c.subtitles[0] // We the lord of waterdeep...
 	}
 
-	if c.scene1.scrollOffset <= 63*3+16 { // 63 is the height of the shaft segment. We move 3 segments down + 16 pixels for the extra in the window
+	if c.scene1.scrollOffset <= 63*2+16 { // 63 is the height of the shaft segment. We move 2 segments down + 16 pixels for the extra in the window
 		c.scene1.scrollOffset += 1
+	} else {
+		c.scene1.holdCounter += 1
+		c.subtitle = c.subtitles[1] // Give call to the heroes of the land...
 	}
 
+	if c.scene1.holdCounter > c.scene1.holdLimit {
+		return true, nil
+	}
 	return false, nil
+
 }
 
 func (c *CutSceneManager) Scene1Draw(screen *ebiten.Image, game *Game) {
@@ -70,22 +81,17 @@ func (c *CutSceneManager) Scene1Draw(screen *ebiten.Image, game *Game) {
 		op.GeoM.Reset()
 		op.GeoM.Translate(96, 0+float64(c.scene1.scrollOffset)) // Segment 2
 		screen.DrawImage(t, op)
-		op.GeoM.Reset()
-		op.GeoM.Translate(96, -63+float64(c.scene1.scrollOffset)) // Segment 1
-		screen.DrawImage(t, op)
+		// op.GeoM.Reset()
+		// op.GeoM.Translate(96, -63+float64(c.scene1.scrollOffset)) // Segment 1
+		// screen.DrawImage(t, op)
 
 	}
 
 	if c.scene1.windowSprite != nil {
 		op := &ebiten.DrawImageOptions{} // 143 is the height of the window. 63 for shaft segment 1
-		op.GeoM.Translate(96, -143-63+float64(c.scene1.scrollOffset))
+		op.GeoM.Translate(96, -143+float64(c.scene1.scrollOffset))
 		t := c.scene1.windowSprite.(*ebiten.Image)
 		screen.DrawImage(t, op)
-	}
-	if c.subtitle != nil {
-		op := &ebiten.DrawImageOptions{}
-		op.GeoM.Translate(0, 169)
-		screen.DrawImage(c.subtitle, op)
 	}
 
 }
