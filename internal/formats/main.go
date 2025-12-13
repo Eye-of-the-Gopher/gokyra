@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"image"
 	"image/color"
+	"image/png"
 	"io"
 	"log/slog"
+	"os"
 	"path"
 	"strings"
 
@@ -14,6 +16,7 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/audio"
 	"github.com/hajimehoshi/ebiten/v2/audio/mp3"
 	"github.com/hajimehoshi/ebiten/v2/audio/wav"
+	"github.com/hajimehoshi/ebiten/v2/vector"
 	"github.com/nfnt/resize"
 	"github.com/nibrahim/eye-of-the-gopher/internal/utils"
 )
@@ -67,18 +70,83 @@ func (s *Sprite) GetImageRegion(x0, y0, x1, y1 int) *Sprite {
 	}
 }
 
-func (s *Sprite) GetEbitenImageFader() FadeIterator {
-	count := 5
-
+func (s *Sprite) GetEbitenImageFadeOut(width int, count int) FadeIterator {
+	baseImg := s.GetEbitenImage()
+	baseImgX := baseImg.Bounds().Dx()
+	baseImgY := baseImg.Bounds().Dy()
+	nSquaresX := baseImgX / width
+	nSquaresY := baseImgY / width
+	img := ebiten.NewImageFromImage(baseImg)
+	offset := -4
 	ret := func() (*ebiten.Image, bool) {
 		if count != 0 {
 			count -= 1
-			AssetsLogger.Debug("FadeIterator going on", "count", count)
-			img := s.GetEbitenImage()
+			for x := 0; x < nSquaresX; x++ {
+				for y := 0; y < nSquaresY; y++ {
+					vector.StrokeRect(img, float32(x*width+offset), float32(y*width+offset), float32(width),
+						float32(width), 1.0, color.Black, false)
+					// AssetsLogger.Debug("FadeIterator going on", "count", count)
+				}
+			}
+			// SaveEbitenImage(img, fmt.Sprintf("/tmp/image-%d.png", count))
+			offset += 3
 			return img, true
 		} else {
 			return nil, false
 		}
+
+	}
+	return ret
+}
+
+func (s *Sprite) GetEbitenImageFadeIn(width int, count int) FadeIterator {
+	baseImg := s.GetEbitenImage()
+	baseImgX := baseImg.Bounds().Dx()
+	baseImgY := baseImg.Bounds().Dy()
+	nSquaresX := baseImgX / width
+	nSquaresY := baseImgY / width
+
+	mask := ebiten.NewImage(baseImgX, baseImgY)
+
+	offset := -4
+
+	ret := func() (*ebiten.Image, bool) {
+		if count != 0 {
+			count -= 1
+			for x := 0; x < nSquaresX; x++ {
+				for y := 0; y < nSquaresY; y++ {
+					vector.StrokeRect(mask, float32(x*width+offset), float32(y*width+offset), float32(width),
+						float32(width), 1.0, color.White, false)
+				}
+			}
+
+			// Create result by masking baseImg
+			result := ebiten.NewImage(baseImgX, baseImgY)
+
+			// Draw base image WITH mask applied
+			op := &ebiten.DrawImageOptions{}
+			op.ColorScale.ScaleWithColor(color.White)
+			result.DrawImage(mask, nil) // Draw mask first
+
+			op2 := &ebiten.DrawImageOptions{}
+			op2.Blend = ebiten.BlendSourceIn
+			result.DrawImage(baseImg, op2) // Apply image through mask
+
+			// img := ebiten.NewImage(baseImgX, baseImgY)
+			// img.DrawImage(baseImg, nil)
+
+			// op := &ebiten.DrawImageOptions{}
+			// op.Blend = ebiten.BlendSourceIn // Mask erases pixels
+			// img.DrawImage(mask, op)
+
+			// SaveEbitenImage(result, fmt.Sprintf("/tmp/image-%d.png", count))
+
+			offset += 3
+			return result, true
+		} else {
+			return nil, false
+		}
+
 	}
 	return ret
 }
@@ -222,6 +290,26 @@ func (a *Assets) DumpAssets() {
 	for k := range a.assets {
 		fmt.Println(k)
 	}
+}
+
+func SaveEbitenImage(img *ebiten.Image, filename string) error {
+	// Convert to standard image
+	fmt.Println("Writing ", filename)
+	rgba := image.NewRGBA(img.Bounds())
+	for y := img.Bounds().Min.Y; y < img.Bounds().Max.Y; y++ {
+		for x := img.Bounds().Min.X; x < img.Bounds().Max.X; x++ {
+			rgba.Set(x, y, img.At(x, y))
+		}
+	}
+
+	// Save as PNG
+	f, err := os.Create(filename)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	return png.Encode(f, rgba)
 }
 
 // Load assets from original EOB game. Game files should be in the provided directory

@@ -36,6 +36,7 @@ func (c *CutSceneManager) Scene0Update(game *Game) (bool, error) {
 		c.scene0.clearing = true
 		c.scene0.fader = fadeGridGen(0, 0, 10)
 	}
+
 	if c.scene0.clearing {
 		pixelsToConsume := 15
 		for i := 0; i < pixelsToConsume; i++ {
