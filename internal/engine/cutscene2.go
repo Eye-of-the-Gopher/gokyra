@@ -74,9 +74,14 @@ func (c *CutSceneManager) Scene2Update(game *Game) (bool, error) {
 		}
 	}
 	if c.scene2.drawMap {
+		c.scene2.mageCircle = nil
+		c.scene2.orb = nil
 		if img, map1Fader := c.scene2.map1FaderIn(); map1Fader {
 			c.scene2.map1 = img
+		} else {
+			return true, nil
 		}
+
 	}
 
 	return false, nil

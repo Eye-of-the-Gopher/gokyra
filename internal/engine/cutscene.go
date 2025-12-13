@@ -23,6 +23,7 @@ type CutSceneManager struct {
 	scene0 *Scene0
 	scene1 *Scene1
 	scene2 *Scene2
+	scene3 *Scene3
 }
 
 func NewCutSceneManager(assets *formats.Assets) (*CutSceneManager, error) {
@@ -41,6 +42,7 @@ func NewCutSceneManager(assets *formats.Assets) (*CutSceneManager, error) {
 	sm0, err := NewScene0(csm)
 	sm1, err := NewScene1(csm)
 	sm2, err := NewScene2(csm)
+	sm3, err := NewScene3(csm)
 
 	if err != nil {
 		return nil, err
@@ -48,6 +50,7 @@ func NewCutSceneManager(assets *formats.Assets) (*CutSceneManager, error) {
 	csm.scene0 = sm0
 	csm.scene1 = sm1
 	csm.scene2 = sm2
+	csm.scene3 = sm3
 	return csm, nil
 
 }
@@ -69,7 +72,12 @@ func (c *CutSceneManager) Update(game *Game) (bool, error) {
 		case 2:
 			next, _ := c.Scene2Update(game)
 			if next {
-				c.scene = 2 // Go to next
+				c.scene = 3 // Go to next
+			}
+		case 3:
+			next, _ := c.Scene3Update(game)
+			if next {
+				c.scene = 3 // Go to next
 			}
 		default:
 			EngineLogger.Warn("Scene not implemented yet", "scene", c.scene)
@@ -88,6 +96,8 @@ func (c *CutSceneManager) Draw(screen *ebiten.Image, game *Game) {
 		c.Scene1Draw(screen, game)
 	case 2:
 		c.Scene2Draw(screen, game)
+	case 3:
+		c.Scene3Draw(screen, game)
 	default:
 		EngineLogger.Warn("Scene not implemented yet", "scene", c.scene)
 	}
