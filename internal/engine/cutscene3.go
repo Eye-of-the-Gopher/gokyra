@@ -53,8 +53,11 @@ func NewScene3(c *CutSceneManager) (*Scene3, error) {
 func (c *CutSceneManager) Scene3Update(game *Game) (bool, error) {
 	if c.scene3.mapCounter < 60 {
 		c.scene3.mapCounter += 1
+		return false, nil
+	} else {
+		return true, nil
 	}
-	return false, nil
+
 }
 
 func (c *CutSceneManager) Scene3Draw(screen *ebiten.Image, game *Game) {
