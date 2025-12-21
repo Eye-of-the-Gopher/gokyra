@@ -13,7 +13,6 @@ type Scene4 struct {
 	groupY        float64
 	ground        *ebiten.Image
 	groupArriving []*formats.Sprite
-	groupLeaving  []*formats.Sprite
 	groupIdx      int
 
 	groundPos *ebiten.DrawImageOptions
