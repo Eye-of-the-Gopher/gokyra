@@ -14,9 +14,10 @@ type Scene4 struct {
 	ground        *ebiten.Image
 	groupArriving []*formats.Sprite
 	groupLeaving  []*formats.Sprite
-	groundPos     *ebiten.DrawImageOptions
-	groundCntr    int
-	tmp           bool
+	groupIdx      int
+
+	groundPos *ebiten.DrawImageOptions
+	animIdx   int
 }
 
 func NewScene4(c *CutSceneManager) (*Scene4, error) {
@@ -31,6 +32,7 @@ func NewScene4(c *CutSceneManager) (*Scene4, error) {
 	groupArriving := []*formats.Sprite{wtrdp3.GetImageRegion(0, 152, 35, 184),
 		wtrdp3.GetImageRegion(41, 152, 76, 184),
 		wtrdp3.GetImageRegion(81, 152, 116, 184),
+		wtrdp3.GetImageRegion(41, 152, 76, 184),
 	}
 
 	op := &ebiten.DrawImageOptions{}
@@ -45,20 +47,20 @@ func NewScene4(c *CutSceneManager) (*Scene4, error) {
 		ground:        ground,
 		groupArriving: groupArriving,
 		groundPos:     op,
-		groundCntr:    0,
+		groupIdx:      0,
+		animIdx:       0,
 	}, nil
 }
 
 func (c *CutSceneManager) Scene4Update(game *Game) (bool, error) {
-	if c.scene4.groupX > 110 {
-		if c.scene4.tmp {
-			c.scene4.groundCntr = c.scene4.groundCntr + 1
-			c.scene4.tmp = false
-		} else {
-			c.scene4.tmp = true
-		}
-		fmt.Println("Ground counter ", c.scene4.groundCntr, c.scene4.groupX, c.scene4.groupY)
-		c.scene4.groundCntr = c.scene4.groundCntr % 3
+	c.scene4.animIdx += 1
+	if c.scene4.animIdx < 75 {
+		t := c.scene4.groupIdx
+		t += 1
+		t %= len(c.scene4.groupArriving)
+		c.scene4.groupIdx = t
+
+		fmt.Println("Ground counter ", t, c.scene4.groupX, c.scene4.groupY)
 		c.scene4.groupX = c.scene4.groupX - 1
 		c.scene4.groupY = c.scene4.groupY + 1
 	}
@@ -72,7 +74,7 @@ func (c *CutSceneManager) Scene4Draw(screen *ebiten.Image, game *Game) {
 	}
 	op := &ebiten.DrawImageOptions{}
 	op.GeoM.Translate(c.scene4.groupX, c.scene4.groupY)
-	grp := c.scene4.groupArriving[c.scene4.groundCntr].GetEbitenImage()
+	grp := c.scene4.groupArriving[c.scene4.groupIdx].GetEbitenImage()
 	screen.DrawImage(grp, op)
 
 }
