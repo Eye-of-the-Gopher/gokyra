@@ -43,8 +43,8 @@ func NewScene2(c *CutSceneManager) (*Scene2, error) {
 		map1FaderIn:  map1.GetEbitenImageFadeIn(10, 20),
 		mageFaderIn:  mageCircle.GetEbitenImageFadeIn(10, 20),
 		mageFaderOut: mageCircle.GetEbitenImageFadeOut(10, 20),
-		mageCounter:  15,
-		orbCounter:   10,
+		mageCounter:  20,
+		orbCounter:   15,
 		drawMap:      false,
 	}, nil
 }

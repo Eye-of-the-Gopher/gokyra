@@ -32,7 +32,7 @@ func NewScene1(c *CutSceneManager) (*Scene1, error) {
 		mageCircleSprite: towrmage.GetImageRegion(128, 0, 256, 104).GetEbitenImage(),
 		scrollOffset:     0,
 		holdCounter:      0,
-		holdLimit:        15,
+		holdLimit:        20,
 	}, nil
 
 }

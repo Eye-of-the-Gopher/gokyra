@@ -29,7 +29,9 @@ func NewScene0(c *CutSceneManager) (*Scene0, error) {
 }
 
 func (c *CutSceneManager) Scene0Update(game *Game) (bool, error) {
-	game.EnsureTrackPlaying("ENHANCED/CUTSCENE.WAV")
+	// game.EnsureTrackPlaying("ENHANCED/CUTSCENE.WAV")
+	game.EnsureTrackPlaying("ENHANCED/CUTSCENE-ENHANCED.MP3")
+
 	if c.scene0.lineImg == nil { // Create the fadeout line the first time
 		EngineLogger.Debug("I'm initting the lineImg")
 		c.scene0.lineImg = ebiten.NewImage(200, 200)
