@@ -28,6 +28,7 @@ const (
 	GameMenu
 	GamePlaying
 	GamePaused
+	GameQuit
 )
 
 type Game struct {
@@ -44,6 +45,7 @@ type Game struct {
 	// and Draw to them depending on stage
 	introManager    *IntroManager
 	cutSceneManager *CutSceneManager
+	menuManager     *MenuManager
 
 	// Assets used in the game
 	assets formats.Assets
@@ -56,6 +58,7 @@ func NewGame(assetDir string, extraAssetDir string, enhanced bool) Game {
 
 	introManager := NewIntroManager(assets, enhanced)
 	cutsceneManager, err := NewCutSceneManager(assets)
+	menuManager := NewMenuManager(assets)
 	if err != nil {
 		panic(err)
 	}
@@ -63,7 +66,8 @@ func NewGame(assetDir string, extraAssetDir string, enhanced bool) Game {
 	return Game{
 		introManager:    introManager,
 		cutSceneManager: cutsceneManager,
-		state:           GameIntro,
+		menuManager:     menuManager,
+		state:           GameMenu,
 		// state:        GameCutScene,
 		assets:       *assets,
 		audioContext: audioContext,
@@ -105,11 +109,17 @@ func (g *Game) Update() error {
 	case GameCutScene:
 		next, _ := g.cutSceneManager.Update(g)
 		if next {
-			g.state = GameCutScene // Change this when done
+			g.state = GameMenu
 		}
 	case GameMenu:
-		fmt.Println("Menu : Not implemented")
-
+		next, _ := g.menuManager.Update(g)
+		if next { // Not as simple as NEXT here. The user's option will change direction. TBD from here.
+			EngineLogger.Debug("Received return")
+			g.state = GameQuit
+		}
+	case GameQuit:
+		EngineLogger.Info("Shutting down")
+		return ebiten.Termination
 	}
 	return nil
 }
@@ -120,6 +130,8 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		g.introManager.Draw(screen, g)
 	case GameCutScene:
 		g.cutSceneManager.Draw(screen, g)
+	case GameMenu:
+		g.menuManager.Draw(screen, g)
 	}
 	// screen.DrawImage(g.image, nil)
 	fps := ebiten.ActualFPS()
