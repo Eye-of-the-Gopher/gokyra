@@ -49,7 +49,7 @@ func NewMenuManager(assets *formats.Assets) *MenuManager {
 
 }
 
-func (m *MenuManager) Update(g *Game) (bool, error) {
+func (m *MenuManager) Update(g *Game) (GameState, error) {
 	// Key just pressed this frame (not held)
 	if inpututil.IsKeyJustPressed(ebiten.KeyDown) {
 		m.selectedOption++
@@ -68,11 +68,11 @@ func (m *MenuManager) Update(g *Game) (bool, error) {
 	if inpututil.IsKeyJustPressed(ebiten.KeyEnter) {
 		EngineLogger.Debug("Selected item ", "entry", m.menuItems[m.selectedOption])
 		if m.selectedOption == 2 {
-			return true, nil
+			return GameQuit, nil
 		}
 	}
 
-	return false, nil
+	return GameMenu, nil
 }
 
 func (m *MenuManager) Draw(screen *ebiten.Image, g *Game) (bool, error) {

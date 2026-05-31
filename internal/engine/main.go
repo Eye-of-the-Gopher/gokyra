@@ -102,21 +102,11 @@ func (g *Game) EnsureTrackPlaying(trackname string) {
 func (g *Game) Update() error {
 	switch g.state {
 	case GameIntro:
-		next, _ := g.introManager.Update(g)
-		if next {
-			g.state = GameCutScene
-		}
+		g.state, _ = g.introManager.Update(g)
 	case GameCutScene:
-		next, _ := g.cutSceneManager.Update(g)
-		if next {
-			g.state = GameMenu
-		}
+		g.state, _ = g.cutSceneManager.Update(g)
 	case GameMenu:
-		next, _ := g.menuManager.Update(g)
-		if next { // Not as simple as NEXT here. The user's option will change direction. TBD from here.
-			EngineLogger.Debug("Received return")
-			g.state = GameQuit
-		}
+		g.state, _ = g.menuManager.Update(g)
 	case GameQuit:
 		EngineLogger.Info("Shutting down")
 		return ebiten.Termination

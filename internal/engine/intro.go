@@ -44,7 +44,7 @@ type IntroManager struct {
 	fadeAlpha  float64
 }
 
-func (i *IntroManager) Update(game *Game) (bool, error) {
+func (i *IntroManager) Update(game *Game) (GameState, error) {
 	// EngineLogger.Debug("Game is playing Intro")
 
 	// If there are 6 stages, we move to next the next Game state
@@ -54,7 +54,7 @@ func (i *IntroManager) Update(game *Game) (bool, error) {
 	// be done better. TBD
 	if i.stageIndex >= len(i.stages) {
 		EngineLogger.Debug("Ending intro")
-		return true, nil
+		return GameCutScene, nil
 	}
 	stage := &i.stages[i.stageIndex]
 	// EngineLogger.Debug("Time now", "startedAt", stage.startedAt, "time since", time.Since(stage.startedAt), "duration", stage.displayTime, "running", stage.running)
@@ -77,7 +77,7 @@ func (i *IntroManager) Update(game *Game) (bool, error) {
 		if time.Since(stage.startedAt) > stage.displayTime { //If time is up for this stage, then we need to decide what to do
 			if i.stageIndex == len(i.stages)-1 { // If it's the last stage, then tell the framework to move on
 				EngineLogger.Debug("On last page")
-				return true, nil
+				return GameCutScene, nil
 			} else { // Else, go to the next scene
 				i.stageIndex++
 				i.fading = false
@@ -85,7 +85,7 @@ func (i *IntroManager) Update(game *Game) (bool, error) {
 			}
 		}
 	}
-	return false, nil
+	return GameIntro, nil
 }
 
 func (i *IntroManager) Draw(screen *ebiten.Image, game *Game) {

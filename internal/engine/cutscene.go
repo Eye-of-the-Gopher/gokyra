@@ -58,7 +58,7 @@ func NewCutSceneManager(assets *formats.Assets) (*CutSceneManager, error) {
 
 }
 
-func (c *CutSceneManager) Update(game *Game) (bool, error) {
+func (c *CutSceneManager) Update(game *Game) (GameState, error) {
 	c.frameCntr += 1
 	if c.frameCntr == c.frameDelay {
 		switch c.scene {
@@ -87,14 +87,14 @@ func (c *CutSceneManager) Update(game *Game) (bool, error) {
 			if next {
 				c.scene = 4 // Go to next
 				EngineLogger.Info("Going to next stage")
-				return true, nil
+				return GameMenu, nil
 			}
 		default:
 			EngineLogger.Warn("Scene not implemented yet", "scene", c.scene)
 		}
 		c.frameCntr = 0
 	}
-	return false, nil
+	return GameCutScene, nil
 
 }
 
