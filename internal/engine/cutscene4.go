@@ -64,7 +64,7 @@ func (c *CutSceneManager) Scene4Update(game *Game) (bool, error) {
 		c.scene4.groupY = c.scene4.groupY + 1
 	}
 
-	return false, nil
+	return true, nil
 }
 
 func (c *CutSceneManager) Scene4Draw(screen *ebiten.Image, game *Game) {

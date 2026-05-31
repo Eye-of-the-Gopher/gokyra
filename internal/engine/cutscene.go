@@ -86,6 +86,8 @@ func (c *CutSceneManager) Update(game *Game) (bool, error) {
 			next, _ := c.Scene4Update(game)
 			if next {
 				c.scene = 4 // Go to next
+				EngineLogger.Info("Going to next stage")
+				return true, nil
 			}
 		default:
 			EngineLogger.Warn("Scene not implemented yet", "scene", c.scene)
