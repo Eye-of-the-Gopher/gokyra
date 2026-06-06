@@ -58,7 +58,7 @@ func main() {
 		}
 		decompressedData := formats.DecodeCmp(imageFile, CMPData, palette)
 
-		img := formats.CMPToImage(decompressedData, palette, 320, 200, 1)
+		img := formats.CMPToImage(decompressedData, palette, 320, 200)
 
 		file, err := os.Create(outputFile)
 		if err != nil {

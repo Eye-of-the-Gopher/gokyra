@@ -57,7 +57,7 @@ func ErrorAndExit(message string, args ...any) {
 func ImageName(fName string, newExt string, opDir string) string {
 	base := strings.ToLower(filepath.Base(fName))
 	ext := filepath.Ext(base)
-	withoutExt := strings.Trim(base, ext)
+	withoutExt := strings.TrimSuffix(base, ext)
 	return path.Join(opDir, withoutExt+"."+newExt)
 }
 

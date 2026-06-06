@@ -28,6 +28,8 @@ const (
 	GameMenu
 	GamePlaying
 	GamePaused
+	GameCharGen
+	GameLoad
 	GameQuit
 )
 
@@ -46,6 +48,7 @@ type Game struct {
 	introManager    *IntroManager
 	cutSceneManager *CutSceneManager
 	menuManager     *MenuManager
+	charGenManager  *CharGenManager
 
 	// Assets used in the game
 	assets formats.Assets
@@ -59,6 +62,8 @@ func NewGame(assetDir string, extraAssetDir string, enhanced bool) Game {
 	introManager := NewIntroManager(assets, enhanced)
 	cutsceneManager, err := NewCutSceneManager(assets)
 	menuManager := NewMenuManager(assets)
+	charGenManager, err := NewCharGenManager(assets)
+
 	if err != nil {
 		panic(err)
 	}
@@ -67,6 +72,7 @@ func NewGame(assetDir string, extraAssetDir string, enhanced bool) Game {
 		introManager:    introManager,
 		cutSceneManager: cutsceneManager,
 		menuManager:     menuManager,
+		charGenManager:  charGenManager,
 		state:           GameMenu,
 		// state:        GameCutScene,
 		assets:       *assets,
@@ -83,7 +89,7 @@ func (g *Game) EnsureTrackPlaying(trackname string) {
 	} else {
 		track, err := g.assets.GetAudioTrack(trackname)
 		if err != nil {
-			EngineLogger.Debug("Can't get track ", "name", trackname)
+			EngineLogger.Debug("Can't get track ", "name", trackname, "Error", err)
 		} else if g.currentTrack != nil && g.currentTrack.IsPlaying() { // There's something already playing
 			err := g.currentTrack.Close() // Stop it
 			if err != nil {
@@ -107,6 +113,12 @@ func (g *Game) Update() error {
 		g.state, _ = g.cutSceneManager.Update(g)
 	case GameMenu:
 		g.state, _ = g.menuManager.Update(g)
+	case GameLoad:
+		EngineLogger.Info("Game loading not implemented")
+		g.state = GameMenu
+	case GameCharGen:
+		EngineLogger.Info("Character generation")
+		g.state, _ = g.charGenManager.Update(g)
 	case GameQuit:
 		EngineLogger.Info("Shutting down")
 		return ebiten.Termination
@@ -122,6 +134,8 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		g.cutSceneManager.Draw(screen, g)
 	case GameMenu:
 		g.menuManager.Draw(screen, g)
+	case GameCharGen:
+		g.charGenManager.Draw(screen, g)
 	}
 	// screen.DrawImage(g.image, nil)
 	fps := ebiten.ActualFPS()

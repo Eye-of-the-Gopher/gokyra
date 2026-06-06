@@ -67,6 +67,12 @@ func (m *MenuManager) Update(g *Game) (GameState, error) {
 
 	if inpututil.IsKeyJustPressed(ebiten.KeyEnter) {
 		EngineLogger.Debug("Selected item ", "entry", m.menuItems[m.selectedOption])
+		if m.selectedOption == 0 {
+			return GameLoad, nil
+		}
+		if m.selectedOption == 1 {
+			return GameCharGen, nil
+		}
 		if m.selectedOption == 2 {
 			return GameQuit, nil
 		}

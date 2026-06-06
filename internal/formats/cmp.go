@@ -55,7 +55,7 @@ func parseCmpBody(header CMPHeader, input []byte, palette color.Palette) ([]byte
 		relativeMode = false
 	}
 
-	for inputPos < len(input) {
+	for inputPos < len(input) && outputPos < len(output) {
 		commandCount += 1
 		inDone := fmt.Sprintf("%04d/%04d (%.2f%%)", inputPos, len(input), (float64(inputPos)/float64(len(input)))*100)
 		opDone := fmt.Sprintf("%06d/%06d (%.2f%%)", outputPos, len(output), (float64(outputPos)/float64(len(output)))*100)
@@ -94,6 +94,12 @@ func parseCmpBody(header CMPHeader, input []byte, palette color.Palette) ([]byte
 			count := binary.LittleEndian.Uint16(input[inputPos : inputPos+2]) // Read Count byte 1 and 2
 			inputPos += 2                                                     // Go to value
 			value := input[inputPos]
+			// Clamp to remaining output: the last 0xFE in some files (e.g. EOBTITLE.CMP)
+			// asks to fill more bytes than the image has left. Matches ScummVM's
+			// `if (len > count) len = count;` in decodeFrame4.
+			if int(count) > len(output)-outputPos {
+				count = uint16(len(output) - outputPos)
+			}
 			CmpLogger.Debug("C4:", "id", commandCount, "indone", inDone, "opdone", opDone, "count", count, "pattern", pattern, "value", value)
 			for range count {
 				output[outputPos] = value
@@ -109,6 +115,10 @@ func parseCmpBody(header CMPHeader, input []byte, palette color.Palette) ([]byte
 			pattern := utils.BytesToBinary(input[inputPos : inputPos+5])
 			count := int(binary.LittleEndian.Uint16(input[inputPos+1 : inputPos+3]))
 			pos := int(binary.LittleEndian.Uint16(input[inputPos+3 : inputPos+5]))
+			// Clamp to remaining output. Same reason as C4.
+			if count > len(output)-outputPos {
+				count = len(output) - outputPos
+			}
 			var target int
 			if relativeMode {
 				target = outputPos - pos
